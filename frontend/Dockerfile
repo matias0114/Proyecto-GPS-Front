@@ -1,9 +1,9 @@
 # Etapa 1: Build Angular
-FROM node:20-alpine AS build
+FROM node:20-alpine as build
 WORKDIR /app
 COPY ./frontend/ .  # Asume que el código Angular está en /frontend
 RUN npm install
-RUN npm run build  # No uses --prod si ya está definido por defecto como production
+RUN npm run build --prod
 
 # Etapa 2: Servidor Nginx
 FROM nginx:alpine
