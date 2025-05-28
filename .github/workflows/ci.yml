@@ -11,7 +11,7 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/**'
-  
+
 permissions:
   contents: write
 
@@ -57,10 +57,10 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/proyectogps-frontend:latest
             ${{ secrets.DOCKER_USERNAME }}/proyectogps-frontend:${{ github.sha }}
-      
+
       - name: Replace image tag in Kubernetes manifest
         run: |
-          sed -i "s|matiasjara1901244/proyectogps-frontend:latest|matiasjara1901244/proyectogps-frontend:${{ github.sha }}|g" k8s/frontend-deployment.yaml
+          sed -i "s|${{ secrets.DOCKER_USERNAME }}/proyectogps-frontend:.*|${{ secrets.DOCKER_USERNAME }}/proyectogps-frontend:${{ github.sha }}|g" k8s/frontend-deployment.yaml
 
       - name: Commit and push updated deployment.yaml
         run: |
@@ -68,7 +68,7 @@ jobs:
           git config user.email "github-actions@github.com"
           git add k8s/frontend-deployment.yaml
           if ! git diff --cached --quiet; then
-            git commit -m "Update frontend image tag to ${{ github.sha }}"
+            git commit -m "Update frontend image tag to ${{ github.sha }} [skip ci]"
             git push
           else
             echo "No changes to commit."
