@@ -1,0 +1,46 @@
+.facturas-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .facturas-container h2 {
+    text-align: center;
+    color: #00acc1;
+    margin-bottom: 1.5rem;
+  }
+
+  .facturas-form .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .facturas-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+  }
+
+  .facturas-form input,
+  .facturas-form select,
+  .facturas-form textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .btn-registrar {
+    background-color: #00acc1;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    display: block;
+    width: 100%;
+  }

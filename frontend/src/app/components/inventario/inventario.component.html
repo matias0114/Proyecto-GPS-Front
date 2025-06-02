@@ -1,1 +1,36 @@
-<p>inventario works!</p>
+<div class="inventario-container">
+  <h2>Carga de Inventario</h2>
+
+  <form class="inventario-form">
+    <div class="form-group">
+      <label for="codigo">Código del Producto</label>
+      <input type="text" id="codigo" name="codigo" required />
+    </div>
+
+    <div class="form-group">
+      <label for="nombre">Nombre del Producto</label>
+      <input type="text" id="nombre" name="nombre" required />
+    </div>
+
+    <div class="form-group">
+      <label for="cantidad">Cantidad en Stock</label>
+      <input type="number" id="cantidad" name="cantidad" required />
+    </div>
+
+    <div class="form-group">
+      <label for="ubicacion">Ubicación/Bodega</label>
+      <input type="text" id="ubicacion" name="ubicacion" />
+    </div>
+
+    <div class="form-group">
+      <label for="tipoCarga">Tipo de Carga</label>
+      <select id="tipoCarga" name="tipoCarga">
+        <option value="general">General</option>
+        <option value="selectivo">Selectivo</option>
+        <option value="barrido">Barrido</option>
+      </select>
+    </div>
+
+    <button type="submit" class="btn-cargar">Cargar Inventario</button>
+  </form>
+</div>

@@ -1,1 +1,32 @@
-<p>historial-pacientes works!</p>
+<div class="historial-container">
+  <h2>Historial Clínico de Pacientes</h2>
+
+  <form class="historial-form">
+    <div class="form-group">
+      <label for="rut">RUT del Paciente</label>
+      <input type="text" id="rut" name="rut" placeholder="Ej: 12345678-9" required />
+    </div>
+
+    <div class="form-group">
+      <label for="nombre">Nombre Completo</label>
+      <input type="text" id="nombre" name="nombre" required />
+    </div>
+
+    <div class="form-group">
+      <label for="fecha">Fecha de Consulta</label>
+      <input type="date" id="fecha" name="fecha" required />
+    </div>
+
+    <div class="form-group">
+      <label for="diagnostico">Diagnóstico</label>
+      <textarea id="diagnostico" name="diagnostico" rows="3"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="tratamiento">Tratamiento/Medicamentos</label>
+      <textarea id="tratamiento" name="tratamiento" rows="3"></textarea>
+    </div>
+
+    <button type="submit" class="btn-guardar">Guardar Historial</button>
+  </form>
+</div>

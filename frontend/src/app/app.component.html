@@ -1,1 +1,20 @@
-<h1>Hola Mundo</h1>
+<header class="header">
+  <div class="container nav-container">
+    <div class="logo">FARMACIA COMUNAL</div>
+    <nav class="nav-links">
+      <a routerLink="/menu">Inicio</a>
+      <a routerLink="/pacientes">Pacientes</a>
+      <a routerLink="/historial-pacientes">Historial Pacientes</a>
+      <a routerLink="/inventario">Inventario</a>
+      <a routerLink="/facturas">Facturas y Guías</a>
+      <a routerLink="/precios">Lista de Precios</a>
+    </nav>
+    <div class="auth-buttons">
+      <button class="btn-outline">Iniciar Sesión</button>
+      <button class="btn-filled">Registrarse</button>
+    </div>
+  </div>
+</header>
+
+<!-- Aquí se mostrarán los componentes según la ruta -->
+<router-outlet></router-outlet>

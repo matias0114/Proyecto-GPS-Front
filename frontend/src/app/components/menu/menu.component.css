@@ -1,0 +1,41 @@
+.menu-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  .menu-container h2 {
+    color: #00796b;
+    margin-bottom: 1rem;
+  }
+
+  .menu-container p {
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+  }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .menu-card {
+    display: block;
+    background-color: #e0f2f1;
+    padding: 1.5rem;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #004d40;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+  }
+
+  .menu-card:hover {
+    background-color: #b2dfdb;
+  }

@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: .
+    container_name: gps-frontend-dev
+    ports:
+      - "4200:80"           # http://localhost:4200
+    environment:
+      # Angular necesita saber dónde vive la API en local:
+      - API_BASE_URL=http://localhost:8080

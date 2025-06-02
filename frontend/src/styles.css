@@ -1,1 +1,118 @@
-/* You can add global styles to this file, and also import other style files */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #e0f7fa, #80deea);
+  }
+
+  .header {
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+
+  .container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    color: #555;
+    font-weight: 500;
+  }
+
+  .auth-buttons button {
+    margin-left: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-outline {
+    background-color: transparent;
+    border: 2px solid #00acc1;
+    color: #00acc1;
+  }
+
+  .btn-filled {
+    background-color: #00acc1;
+    color: #fff;
+  }
+
+  .main-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 0;
+    background: #f5fafd;
+  }
+
+  .main-container {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .text-section {
+    flex: 1;
+    min-width: 300px;
+  }
+
+  .text-section h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .highlight {
+    color: #00acc1;
+  }
+
+  .text-section p {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 1rem;
+  }
+
+  .features {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2rem;
+  }
+
+  .features li {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: #444;
+  }
+
+  .get-started {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 30px;
+    background-color: #00acc1;
+    color: #fff;
+    border: none;
+  }
+
+  .image-section img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }

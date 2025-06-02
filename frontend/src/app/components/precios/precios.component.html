@@ -1,1 +1,27 @@
-<p>precios works!</p>
+<div class="precios-container">
+  <h2>Lista de Precios</h2>
+
+  <form class="precios-form">
+    <div class="form-group">
+      <label for="codigo">Código de Producto</label>
+      <input type="text" id="codigo" name="codigo" placeholder="Ej: PRD-001" required />
+    </div>
+
+    <div class="form-group">
+      <label for="nombre">Nombre del Producto</label>
+      <input type="text" id="nombre" name="nombre" required />
+    </div>
+
+    <div class="form-group">
+      <label for="precio">Precio Unitario ($)</label>
+      <input type="number" id="precio" name="precio" min="0" required />
+    </div>
+
+    <div class="form-group">
+      <label for="vigencia">Fecha de Vigencia</label>
+      <input type="date" id="vigencia" name="vigencia" required />
+    </div>
+
+    <button type="submit" class="btn-guardar">Guardar Precio</button>
+  </form>
+</div>
