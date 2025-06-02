@@ -26,6 +26,6 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: matiasjara1901244/proyectogps-frontend:bd2945576f036359cf595dbfc90ce49b99f8e975
+          image: matiasjara1901244/proyectogps-frontend:44ebf8f4343b24c9166b4c82500488fdb57ea9f6
           ports:
             - containerPort: 80
