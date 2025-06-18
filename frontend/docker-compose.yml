@@ -5,7 +5,6 @@ services:
     build: .
     container_name: gps-frontend-dev
     ports:
-      - "4200:80"           # http://localhost:4200
+      - "85:80"
     environment:
-      # Angular necesita saber dónde vive la API en local:
-      - API_BASE_URL=http://localhost:8080
+      - API_BASE_URL=http://springboot-app:8080
