@@ -8,4 +8,4 @@ services:
       - "85:80"           # http://localhost:4200
     environment:
       # Angular necesita saber dónde vive la API en local:
-      API_BASE_URL=http://190.13.177.173:8080
+      - API_BASE_URL=http://springboot-app:8080
