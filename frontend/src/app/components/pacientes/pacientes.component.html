@@ -1,42 +1,80 @@
-<div class="pacientes-container">
-  <h2>Registro de Pacientes</h2>
+<div class="container mx-auto max-w-lg mt-8 p-6 bg-white rounded shadow">
+  <h2 class="text-2xl font-semibold mb-4 text-center">Registro de Pacientes</h2>
 
-  <form class="pacientes-form">
-    <div class="form-group">
-      <label for="rut">RUT</label>
-      <input type="text" id="rut" name="rut" placeholder="Ej: 12345678-9" required />
+  <div *ngIf="successMessage" class="mb-4 p-2 bg-green-100 text-green-800 rounded">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="mb-4 p-2 bg-red-100 text-red-800 rounded">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Aquí es clave: (ngSubmit) en el form y button type="submit" -->
+  <form [formGroup]="formularioPaciente" (ngSubmit)="onSubmit()" novalidate>
+    <!-- Nombre -->
+    <div class="mb-4">
+      <label for="nombre" class="block font-medium">Nombre *</label>
+      <input id="nombre" type="text"
+             formControlName="nombre"
+             class="w-full border rounded p-2"
+             placeholder="Juan" />
+      <div *ngIf="formularioPaciente.get('nombre')?.invalid && formularioPaciente.get('nombre')?.touched"
+           class="text-red-600 text-sm">Requerido</div>
     </div>
 
-    <div class="form-group">
-      <label for="nombre">Nombre Completo</label>
-      <input type="text" id="nombre" name="nombre" required />
+    <!-- Apellido -->
+    <div class="mb-4">
+      <label for="apellido" class="block font-medium">Apellido *</label>
+      <input id="apellido" type="text"
+             formControlName="apellido"
+             class="w-full border rounded p-2"
+             placeholder="Pérez" />
+      <div *ngIf="formularioPaciente.get('apellido')?.invalid && formularioPaciente.get('apellido')?.touched"
+           class="text-red-600 text-sm">Requerido</div>
     </div>
 
-    <div class="form-group">
-      <label for="fechaNacimiento">Fecha de Nacimiento</label>
-      <input type="date" id="fechaNacimiento" name="fechaNacimiento" required />
+    <!-- DNI -->
+    <div class="mb-4">
+      <label for="dni" class="block font-medium">DNI *</label>
+      <input id="dni" type="text"
+             formControlName="dni"
+             class="w-full border rounded p-2"
+             placeholder="12345678-9" />
+      <div *ngIf="formularioPaciente.get('dni')?.invalid && formularioPaciente.get('dni')?.touched"
+           class="text-red-600 text-sm">Requerido</div>
     </div>
 
-    <div class="form-group">
-      <label for="direccion">Dirección</label>
-      <input type="text" id="direccion" name="direccion" />
+    <!-- Fecha de Nacimiento -->
+    <div class="mb-4">
+      <label for="fechaNacimiento" class="block font-medium">Fecha de Nacimiento *</label>
+      <input id="fechaNacimiento" type="date"
+             formControlName="fechaNacimiento"
+             class="w-full border rounded p-2" />
+      <div *ngIf="formularioPaciente.get('fechaNacimiento')?.invalid && formularioPaciente.get('fechaNacimiento')?.touched"
+           class="text-red-600 text-sm">Requerido</div>
     </div>
 
-    <div class="form-group">
-      <label for="telefono">Teléfono</label>
-      <input type="tel" id="telefono" name="telefono" />
+    <!-- Dirección -->
+    <div class="mb-4">
+      <label for="direccion" class="block font-medium">Dirección</label>
+      <input id="direccion" type="text"
+             formControlName="direccion"
+             class="w-full border rounded p-2"
+             placeholder="Calle Falsa 123" />
     </div>
 
-    <div class="form-group">
-      <label for="beneficio">Beneficio Asignado</label>
-      <select id="beneficio" name="beneficio">
-        <option value="">Seleccione...</option>
-        <option value="general">General</option>
-        <option value="preferente">Preferente</option>
-        <option value="urgente">Urgente</option>
-      </select>
+    <!-- Teléfono -->
+    <div class="mb-4">
+      <label for="telefono" class="block font-medium">Teléfono</label>
+      <input id="telefono" type="tel"
+             formControlName="telefono"
+             class="w-full border rounded p-2"
+             placeholder="+56 9 8765 4321" />
     </div>
 
-    <button type="submit" class="btn-registrar">Registrar Paciente</button>
+    <button type="submit"
+            class="w-full py-3 bg-green-600 text-white font-semibold rounded hover:bg-green-700"
+            [disabled]="formularioPaciente.invalid">
+      Registrar Paciente
+    </button>
   </form>
 </div>
