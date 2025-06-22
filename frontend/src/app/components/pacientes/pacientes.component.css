@@ -1,45 +1,143 @@
-.pacientes-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    background-color: #ffffff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
+/* 1. Contenedor centrado y fondo degradado */
+:host {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #E0F7FA 0%, #80DEEA 100%);
+  margin: 0;
+  position: relative; /* Para posicionar los toasts */
+}
 
-  .pacientes-container h2 {
-    text-align: center;
-    color: #004d40;
-    margin-bottom: 1.5rem;
-  }
+/* 2. Marco del formulario */
+.form-container {
+  background: #ffffffee;            /* Blanco semitransparente */
+  border: 1px solid #B2EBF2;        /* Marco sutil */
+  border-radius: 8px;               /* Redondeo suave */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+}
 
-  .pacientes-form .form-group {
-    margin-bottom: 1rem;
-  }
+/* 3. Título */
+.form-container h2 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #006064;
+  font-size: 1.75rem;
+}
 
-  .pacientes-form label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-  }
+/* 4. Labels */
+.form-container label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+  color: #004D40;
+  font-size: 0.9rem;
+}
 
-  .pacientes-form input,
-  .pacientes-form select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
+/* 5. Inputs */
+.form-container input {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid #B2EBF2;
+  border-radius: 4px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-container input:focus {
+  outline: none;
+  border-color: #26C6DA;
+  box-shadow: 0 0 4px rgba(38,198,218,0.4);
+}
 
-  .btn-registrar {
-    background-color: #00695c;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-    margin-top: 1rem;
-    display: block;
-    width: 100%;
+/* 6. Botón */
+.form-container button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #26C6DA;
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.form-container button:hover {
+  background: #00ACC1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.form-container button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 7. Toasts comunes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
   }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Toast de éxito */
+.toast-success {
+  position: absolute;
+  bottom: -3.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #26C6DA;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  font-size: 0.9rem;
+  text-align: center;
+  opacity: 0;
+  animation: fadeInUp 0.3s forwards;
+  z-index: 10;
+}
+.toast-success .toast-arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #26C6DA;
+}
+
+/* Toast de error */
+.toast-error {
+  position: absolute;
+  bottom: -3.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #e53935;
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  font-size: 0.9rem;
+  text-align: center;
+  opacity: 0;
+  animation: fadeInUp 0.3s forwards;
+  z-index: 10;
+}
+.toast-error .toast-arrow {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #e53935;
+}

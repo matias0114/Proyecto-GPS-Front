@@ -1,79 +1,32 @@
-<div class="container mx-auto max-w-lg mt-8 p-6 bg-white rounded shadow">
-  <h2 class="text-2xl font-semibold mb-4 text-center">Registro de Pacientes</h2>
-
-  <div *ngIf="successMessage" class="mb-4 p-2 bg-green-100 text-green-800 rounded">
-    {{ successMessage }}
-  </div>
-  <div *ngIf="errorMessage" class="mb-4 p-2 bg-red-100 text-red-800 rounded">
-    {{ errorMessage }}
-  </div>
-
-  <!-- Aquí es clave: (ngSubmit) en el form y button type="submit" -->
+<div class="form-container">
+  <h2>Registro de Pacientes</h2>
   <form [formGroup]="formularioPaciente" (ngSubmit)="onSubmit()" novalidate>
     <!-- Nombre -->
-    <div class="mb-4">
-      <label for="nombre" class="block font-medium">Nombre *</label>
-      <input id="nombre" type="text"
-             formControlName="nombre"
-             class="w-full border rounded p-2"
-             placeholder="Juan" />
-      <div *ngIf="formularioPaciente.get('nombre')?.invalid && formularioPaciente.get('nombre')?.touched"
-           class="text-red-600 text-sm">Requerido</div>
-    </div>
+    <label for="nombre">Nombre *</label>
+    <input id="nombre" type="text" formControlName="nombre" placeholder="Juan" />
 
     <!-- Apellido -->
-    <div class="mb-4">
-      <label for="apellido" class="block font-medium">Apellido *</label>
-      <input id="apellido" type="text"
-             formControlName="apellido"
-             class="w-full border rounded p-2"
-             placeholder="Pérez" />
-      <div *ngIf="formularioPaciente.get('apellido')?.invalid && formularioPaciente.get('apellido')?.touched"
-           class="text-red-600 text-sm">Requerido</div>
-    </div>
+    <label for="apellido">Apellido *</label>
+    <input id="apellido" type="text" formControlName="apellido" placeholder="Pérez" />
 
     <!-- DNI -->
-    <div class="mb-4">
-      <label for="dni" class="block font-medium">DNI *</label>
-      <input id="dni" type="text"
-             formControlName="dni"
-             class="w-full border rounded p-2"
-             placeholder="12345678-9" />
-      <div *ngIf="formularioPaciente.get('dni')?.invalid && formularioPaciente.get('dni')?.touched"
-           class="text-red-600 text-sm">Requerido</div>
-    </div>
+    <label for="dni">DNI *</label>
+    <input id="dni" type="text" formControlName="dni" placeholder="12345678-9" />
 
     <!-- Fecha de Nacimiento -->
-    <div class="mb-4">
-      <label for="fechaNacimiento" class="block font-medium">Fecha de Nacimiento *</label>
-      <input id="fechaNacimiento" type="date"
-             formControlName="fechaNacimiento"
-             class="w-full border rounded p-2" />
-      <div *ngIf="formularioPaciente.get('fechaNacimiento')?.invalid && formularioPaciente.get('fechaNacimiento')?.touched"
-           class="text-red-600 text-sm">Requerido</div>
-    </div>
+    <label for="fechaNacimiento">Fecha de Nacimiento *</label>
+    <input id="fechaNacimiento" type="date" formControlName="fechaNacimiento" />
 
     <!-- Dirección -->
-    <div class="mb-4">
-      <label for="direccion" class="block font-medium">Dirección</label>
-      <input id="direccion" type="text"
-             formControlName="direccion"
-             class="w-full border rounded p-2"
-             placeholder="Calle Falsa 123" />
-    </div>
+    <label for="direccion">Dirección</label>
+    <input id="direccion" type="text" formControlName="direccion" placeholder="Calle Falsa 123" />
 
     <!-- Teléfono -->
-    <div class="mb-4">
-      <label for="telefono" class="block font-medium">Teléfono</label>
-      <input id="telefono" type="tel"
-             formControlName="telefono"
-             class="w-full border rounded p-2"
-             placeholder="+56 9 8765 4321" />
-    </div>
+    <label for="telefono">Teléfono</label>
+    <input id="telefono" type="tel" formControlName="telefono" placeholder="+56 9 8765 4321" />
 
-    <button type="submit"
-            class="w-full py-3 bg-green-600 text-white font-semibold rounded hover:bg-green-700"
-            [disabled]="formularioPaciente.invalid">
+    <!-- Botón -->
+    <button type="submit" [disabled]="formularioPaciente.invalid">
       Registrar Paciente
     </button>
   </form>
