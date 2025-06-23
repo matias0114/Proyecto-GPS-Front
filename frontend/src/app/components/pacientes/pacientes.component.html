@@ -4,14 +4,23 @@
     <!-- Nombre -->
     <label for="nombre">Nombre *</label>
     <input id="nombre" type="text" formControlName="nombre" placeholder="Juan" />
+    <div *ngIf="formularioPaciente.get('nombre')?.errors?.['nombreApellidoInvalido'] && formularioPaciente.get('nombre')?.touched" class="error">
+      El nombre solo debe contener letras y espacios.
+    </div>
 
     <!-- Apellido -->
     <label for="apellido">Apellido *</label>
     <input id="apellido" type="text" formControlName="apellido" placeholder="Pérez" />
+    <div *ngIf="formularioPaciente.get('apellido')?.errors?.['nombreApellidoInvalido'] && formularioPaciente.get('apellido')?.touched" class="error">
+      El apellido solo debe contener letras y espacios.
+    </div>
 
     <!-- DNI -->
     <label for="dni">DNI *</label>
     <input id="dni" type="text" formControlName="dni" placeholder="12345678-9" />
+    <div *ngIf="formularioPaciente.get('dni')?.errors?.['rutInvalido'] && formularioPaciente.get('dni')?.touched" class="error">
+      Ingrese un RUT chileno válido.
+    </div>
 
     <!-- Fecha de Nacimiento -->
     <label for="fechaNacimiento">Fecha de Nacimiento *</label>
@@ -23,11 +32,25 @@
 
     <!-- Teléfono -->
     <label for="telefono">Teléfono</label>
-    <input id="telefono" type="tel" formControlName="telefono" placeholder="+56 9 8765 4321" />
+    <input id="telefono" type="tel" formControlName="telefono" placeholder="+56 9XXXXXXXX" />
+    <div *ngIf="formularioPaciente.get('telefono')?.errors?.['telefonoInvalido'] && formularioPaciente.get('telefono')?.touched" class="error">
+      El teléfono debe tener formato chileno: +56 9XXXXXXXX.
+    </div>
 
     <!-- Botón -->
     <button type="submit" [disabled]="formularioPaciente.invalid">
       Registrar Paciente
     </button>
   </form>
+
+  <!-- Toast de éxito -->
+  <div *ngIf="successMessage" class="toast-success">
+    {{ successMessage }}
+    <span class="toast-arrow"></span>
+  </div>
+  <!-- Toast de error -->
+  <div *ngIf="errorMessage" class="toast-error">
+    {{ errorMessage }}
+    <span class="toast-arrow"></span>
+  </div>
 </div>
