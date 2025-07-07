@@ -13,6 +13,7 @@ pipeline {
     REMOTE_HOST  = '190.13.177.173'
   }
 
+
   stages {
     stage('Checkout') {
       steps {
