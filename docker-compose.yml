@@ -6,6 +6,6 @@ services:
       dockerfile: Dockerfile
     container_name: gps-frontend
     ports:
-      - "85:80"
+      - "8005:80"
     environment:
       - API_BASE_URL=http://springboot-app:8080
