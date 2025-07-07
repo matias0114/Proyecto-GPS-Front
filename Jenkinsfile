@@ -51,7 +51,7 @@ pipeline {
               docker run -d \\
                 --name       gps-frontend \\
                 --restart    always \\
-                -p 85:80 \\
+                -p 8005:80 \\
                 -e API_BASE_URL=http://190.13.177.173:8080 \\
                 ${IMAGE_NAME}:latest'
           """
