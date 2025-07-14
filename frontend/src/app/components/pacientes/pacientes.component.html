@@ -15,10 +15,10 @@
       El apellido solo debe contener letras y espacios.
     </div>
 
-    <!-- DNI -->
-    <label for="dni">DNI *</label>
-    <input id="dni" type="text" formControlName="dni" placeholder="12345678-9" />
-    <div *ngIf="formularioPaciente.get('dni')?.errors?.['rutInvalido'] && formularioPaciente.get('dni')?.touched" class="error">
+    <!-- RUT -->
+    <label for="rut">RUT *</label>
+    <input id="rut" type="text" formControlName="rut" placeholder="12345678-9" />
+    <div *ngIf="formularioPaciente.get('rut')?.errors?.['rutInvalido'] && formularioPaciente.get('rut')?.touched" class="error">
       Ingrese un RUT chileno válido.
     </div>
 
@@ -35,6 +35,23 @@
     <input id="telefono" type="tel" formControlName="telefono" placeholder="+56 9XXXXXXXX" />
     <div *ngIf="formularioPaciente.get('telefono')?.errors?.['telefonoInvalido'] && formularioPaciente.get('telefono')?.touched" class="error">
       El teléfono debe tener formato chileno: +56 9XXXXXXXX.
+    </div>
+
+    <!-- Es Beneficiario -->
+    <div class="switch-container">
+      <label>
+        <input type="checkbox" formControlName="esBeneficiario">
+        Es beneficiario
+      </label>
+    </div>
+
+    <!-- Tipo de Beneficio -->
+    <div *ngIf="formularioPaciente.get('esBeneficiario')?.value">
+      <label for="tipoBeneficio">Tipo de Beneficio</label>
+      <select id="tipoBeneficio" formControlName="tipoBeneficio">
+        <option [ngValue]="null">Seleccione un tipo</option>
+        <option *ngFor="let tipo of tiposBeneficio" [value]="tipo">{{tipo}}</option>
+      </select>
     </div>
 
     <!-- Botón -->

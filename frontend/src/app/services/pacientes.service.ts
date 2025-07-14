@@ -14,6 +14,11 @@ export class PacientesService {
 
   crearPaciente(p: Paciente): Observable<Paciente> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    return this.http.post<Paciente>(this.apiUrl, p, { headers });
+    const pacienteData = {
+      ...p,
+      esBeneficiario: p.esBeneficiario || false,
+      tipoBeneficio: p.esBeneficiario ? p.tipoBeneficio : null
+    };
+    return this.http.post<Paciente>(this.apiUrl, pacienteData, { headers });
   }
 }

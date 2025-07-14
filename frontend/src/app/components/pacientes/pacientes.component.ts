@@ -12,6 +12,7 @@ export class PacientesComponent implements OnInit {
   formularioPaciente!: FormGroup;
   successMessage = '';
   errorMessage = '';
+  tiposBeneficio = ['ADULTO_MAYOR', 'CRONICO', 'GRATUIDAD_PSICOTROPICOS'];
 
   constructor(
     private fb: FormBuilder,
@@ -22,11 +23,23 @@ export class PacientesComponent implements OnInit {
     this.formularioPaciente = this.fb.group({
       nombre: ['', [Validators.required, this.nombreApellidoValidator]],
       apellido: ['', [Validators.required, this.nombreApellidoValidator]],
-      dni: ['', [Validators.required, this.rutChilenoValidator]],
+      rut: ['', [Validators.required, this.rutChilenoValidator]],
       fechaNacimiento: ['', Validators.required],
       direccion: [''],
       telefono: ['+56', [Validators.required, this.telefonoChilenoValidator]],
+      esBeneficiario: [false],
+      tipoBeneficio: [null]
     });
+
+    // Observar cambios en esBeneficiario para resetear tipoBeneficio
+    this.formularioPaciente.get('esBeneficiario')?.valueChanges.subscribe(
+      (esBeneficiario: boolean) => {
+        const tipoBeneficioControl = this.formularioPaciente.get('tipoBeneficio');
+        if (!esBeneficiario) {
+          tipoBeneficioControl?.setValue(null);
+        }
+      }
+    );
   }
 
   // Validador personalizado para RUT chileno

@@ -6,7 +6,7 @@
   min-height: 100vh;
   background: linear-gradient(180deg, #E0F7FA 0%, #80DEEA 100%);
   margin: 0;
-  position: relative; /* Para posicionar los toasts */
+  position: relative;
 }
 
 /* 2. Marco del formulario */
@@ -38,8 +38,9 @@
   font-size: 0.9rem;
 }
 
-/* 5. Inputs */
-.form-container input {
+/* 5. Inputs y Select */
+.form-container input,
+.form-container select {
   width: 100%;
   padding: 0.5rem;
   margin-bottom: 1rem;
@@ -47,13 +48,30 @@
   border-radius: 4px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.form-container input:focus {
+.form-container input:focus,
+.form-container select:focus {
   outline: none;
   border-color: #26C6DA;
   box-shadow: 0 0 4px rgba(38,198,218,0.4);
 }
 
-/* 6. Botón */
+/* 6. Switch Container */
+.switch-container {
+  margin: 1rem 0;
+}
+
+.switch-container label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.switch-container input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5rem;
+}
+
+/* 7. Botón */
 .form-container button {
   width: 100%;
   padding: 0.75rem;
@@ -74,7 +92,7 @@
   cursor: not-allowed;
 }
 
-/* 7. Toasts comunes */
+/* 8. Toasts */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -86,14 +104,11 @@
   }
 }
 
-/* Toast de éxito */
-.toast-success {
+.toast-success, .toast-error {
   position: absolute;
   bottom: -3.5rem;
   left: 50%;
   transform: translateX(-50%);
-  background: #26C6DA;
-  color: white;
   padding: 0.75rem 1rem;
   border-radius: 4px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
@@ -103,41 +118,40 @@
   animation: fadeInUp 0.3s forwards;
   z-index: 10;
 }
-.toast-success .toast-arrow {
+
+.toast-success {
+  background: #26C6DA;
+  color: white;
+}
+
+.toast-error {
+  background: #e53935;
+  color: white;
+}
+
+.toast-arrow {
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  width: 0; height: 0;
+  width: 0;
+  height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
+}
+
+.toast-success .toast-arrow {
   border-top: 6px solid #26C6DA;
 }
 
-/* Toast de error */
-.toast-error {
-  position: absolute;
-  bottom: -3.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #e53935;
-  color: white;
-  padding: 0.75rem 1rem;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  font-size: 0.9rem;
-  text-align: center;
-  opacity: 0;
-  animation: fadeInUp 0.3s forwards;
-  z-index: 10;
-}
 .toast-error .toast-arrow {
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0; height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
   border-top: 6px solid #e53935;
+}
+
+/* 9. Mensajes de error */
+.error {
+  color: #e53935;
+  font-size: 0.8rem;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
 }
