@@ -53,8 +53,9 @@ pipeline {
                 --name gps-frontend \\
                 --restart always \\
                 -p 8005:80 \\
-                -e API_BASE_URL=http://gps-backend:8080 \\
-                ${IMAGE_NAME}:latest'
+                -e API_BASE_URL=http://gps-backend:8080 \
+                ${IMAGE_NAME}:latest
+            '
 
             docker network connect backend-net gps-frontend'
           """
