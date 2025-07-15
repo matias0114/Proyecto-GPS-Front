@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { HistorialClinicoService } from '../../services/historial-clinico.service';
 import { Paciente } from '../../models/paciente.model';
+import { HistorialClinico } from '../../models/historial-clinico.model';
 
 @Component({
   selector: 'app-historial-paciente',
@@ -14,6 +15,7 @@ export class HistorialPacienteComponent {
   busquedaRealizada: boolean = false;
   cargando: boolean = false;
   maxDate: string = new Date().toISOString().slice(0, 16);
+  historiales: HistorialClinico[] = [];
 
   formularioBusqueda = this.fb.group({
     rutBusqueda: ['', [
@@ -59,12 +61,24 @@ export class HistorialPacienteComponent {
         next: (paciente) => {
           this.pacienteEncontrado = paciente;
           this.busquedaRealizada = true;
-          this.mensajeError = '';
-          this.cargando = false;
+          // Una vez que encontramos al paciente, buscamos sus historiales
+          this.historialService.obtenerHistorialesPorPaciente(paciente.id!).subscribe({
+            next: (historiales) => {
+              this.historiales = historiales;
+              this.cargando = false;
+              this.mensajeError = '';
+            },
+            error: (error) => {
+              console.error('Error al obtener historiales:', error);
+              this.mensajeError = 'Ocurrió un error al obtener los historiales del paciente.';
+              this.cargando = false;
+            }
+          });
         },
         error: (error) => {
           console.error('Error al buscar paciente:', error);
           this.pacienteEncontrado = null;
+          this.historiales = [];
           this.busquedaRealizada = true;
           this.cargando = false;
           if (error.status === 404) {

@@ -19,6 +19,10 @@ export class HistorialClinicoService {
     return this.http.get<Paciente>(`${environment.apiBase}/pacientes/${rutFormateado}`);
   }
 
+  obtenerHistorialesPorPaciente(pacienteId: number): Observable<HistorialClinico[]> {
+    return this.http.get<HistorialClinico[]>(`${environment.apiBase}/pacientes/${pacienteId}/historiales`);
+  }
+
   crearHistorialClinico(historial: HistorialClinico): Observable<HistorialClinico> {
     // Primero buscar el id del paciente por su RUT
     return this.http.get<Paciente>(`${environment.apiBase}/pacientes/${historial.pacienteRut}`).pipe(
