@@ -1,40 +1,38 @@
-<div class="facturas-container">
-  <h2>Registro de Facturas y Guías de Despacho</h2>
-
-  <form class="facturas-form">
-    <div class="form-group">
-      <label for="tipo">Tipo de Documento</label>
-      <select id="tipo" name="tipo">
-        <option value="factura">Factura</option>
-        <option value="guia">Guía de Despacho</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label for="numero">Número de Documento</label>
-      <input type="text" id="numero" name="numero" required />
-    </div>
-
-    <div class="form-group">
-      <label for="fecha">Fecha de Emisión</label>
-      <input type="date" id="fecha" name="fecha" required />
-    </div>
-
-    <div class="form-group">
-      <label for="proveedor">Proveedor</label>
-      <input type="text" id="proveedor" name="proveedor" required />
-    </div>
-
-    <div class="form-group">
-      <label for="productos">Productos</label>
-      <textarea id="productos" name="productos" placeholder="Lista de productos incluidos..." rows="4"></textarea>
-    </div>
-
-    <div class="form-group">
-      <label for="monto">Monto Total</label>
-      <input type="number" id="monto" name="monto" required />
-    </div>
-
-    <button type="submit" class="btn-registrar">Registrar Documento</button>
+<div class="form-container">
+  <h2>Registro de Facturas</h2>
+  <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
+    <label>Nº Factura *</label>
+    <input formControlName="numeroFactura" />
+    <label>ID Compra *</label>
+    <input type="number" formControlName="compraId" />
+    <label>Monto *</label>
+    <input type="number" formControlName="montoTotal" />
+    <label>RUT Proveedor *</label>
+    <input formControlName="rutProveedor" placeholder="12345678-9" />
+    <button type="submit" [disabled]="formulario.invalid">Crear Factura</button>
   </form>
+
+  <div *ngIf="successMessage" class="toast-success">
+    {{ successMessage }}<span class="toast-arrow"></span>
+  </div>
+  <div *ngIf="errorMessage" class="toast-error">
+    {{ errorMessage }}<span class="toast-arrow"></span>
+  </div>
 </div>
+
+<hr/>
+
+<h3>Listado de Facturas</h3>
+<table>
+  <tr><th>Nº</th><th>Compra</th><th>Monto</th><th>RUT</th><th>Acc.</th></tr>
+  <tr *ngFor="let f of facturas">
+    <td>{{ f.numeroFactura }}</td>
+    <td>{{ f.compraId }}</td>
+    <td>{{ f.montoTotal }}</td>
+    <td>{{ f.rutProveedor }}</td>
+    <td><button (click)="eliminar(f.id!)">🗑️</button></td>
+  </tr>
+</table>
+<!-- Aquí se incluye el componente de guías de despacho -->
+<h2>Guías de Despacho</h2>
+<app-guias-despacho></app-guias-despacho>
