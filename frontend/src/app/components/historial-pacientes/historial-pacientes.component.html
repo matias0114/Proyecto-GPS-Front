@@ -35,33 +35,23 @@
     <p><strong>RUT:</strong> {{ pacienteEncontrado.rut }}</p>
   </div>
 
-  <!-- Formulario de historial clínico -->
-  <form *ngIf="pacienteEncontrado" [formGroup]="formularioHistorial" (ngSubmit)="guardarHistorial()" class="historial-form">
-    <div class="form-group">
-      <label for="fecha">Fecha de Consulta</label>
-      <input type="datetime-local" id="fecha" formControlName="fecha" required [max]="maxDate" />
+  <!-- Lista de historiales clínicos -->
+  <div *ngIf="pacienteEncontrado && historiales.length > 0" class="historiales-list">
+    <h3>Historiales Clínicos</h3>
+    <div *ngFor="let historial of historiales" class="historial-item">
+      <div class="historial-header">
+        <strong>Fecha:</strong> {{ historial.fecha | date:'dd/MM/yyyy HH:mm' }}
+      </div>
+      <div class="historial-content">
+        <p><strong>Diagnóstico:</strong> {{ historial.diagnostico }}</p>
+        <p><strong>Tratamiento:</strong> {{ historial.tratamiento }}</p>
+        <p><strong>Medicamentos Recetados:</strong> {{ historial.medicamentosRecetados }}</p>
+        <p><strong>Observaciones:</strong> {{ historial.observaciones }}</p>
+      </div>
     </div>
+  </div>
 
-    <div class="form-group">
-      <label for="diagnostico">Diagnóstico</label>
-      <textarea id="diagnostico" formControlName="diagnostico" rows="3" required></textarea>
-    </div>
-
-    <div class="form-group">
-      <label for="tratamiento">Tratamiento</label>
-      <textarea id="tratamiento" formControlName="tratamiento" rows="3" required></textarea>
-    </div>
-
-    <div class="form-group">
-      <label for="medicamentosRecetados">Medicamentos Recetados</label>
-      <textarea id="medicamentosRecetados" formControlName="medicamentosRecetados" rows="3" required></textarea>
-    </div>
-
-    <div class="form-group">
-      <label for="observaciones">Observaciones</label>
-      <textarea id="observaciones" formControlName="observaciones" rows="3" required></textarea>
-    </div>
-
-    <button type="submit" class="btn-guardar" [disabled]="!formularioHistorial.valid">Guardar Historial</button>
-  </form>
+  <div *ngIf="pacienteEncontrado && historiales.length === 0" class="no-historiales">
+    No hay historiales clínicos registrados para este paciente.
+  </div>
 </div>
