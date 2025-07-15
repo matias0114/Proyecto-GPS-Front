@@ -13,7 +13,6 @@ pipeline {
     REMOTE_HOST  = '190.13.177.173'
   }
 
-
   stages {
     stage('Checkout') {
       steps {
@@ -24,10 +23,10 @@ pipeline {
     stage('Build & Push') {
       steps {
         dir('frontend') {
-          // construye la imagen usando el Dockerfile de /frontend
+          // Construir la imagen usando el Dockerfile de /frontend
           sh "docker build -t ${IMAGE_NAME}:latest ."
         }
-        // logueo y push a Docker Hub
+        // Login y push a Docker Hub
         withCredentials([usernamePassword(
           credentialsId: 'docker-hub-creds',
           usernameVariable: 'DOCKERHUB_USER',
@@ -45,19 +44,19 @@ pipeline {
       steps {
         sshagent([SSH_CRED]) {
           sh """
-            ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '\\
-              docker pull ${IMAGE_NAME}:latest && \\
-              docker stop gps-frontend || true && \\
-              docker rm   gps-frontend || true && \\
-              docker run -d \\
-                --name gps-frontend \\
-                --restart always \\
-                -p 8005:80 \\
+            ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+              docker pull ${IMAGE_NAME}:latest && 
+              docker stop gps-frontend || true && 
+              docker rm gps-frontend || true && 
+              docker run -d \
+                --name gps-frontend \
+                --restart always \
+                -p 8005:80 \
                 -e API_BASE_URL=http://gps-backend:8080 \
                 ${IMAGE_NAME}:latest
             '
 
-            docker network connect backend-net gps-frontend'
+            docker network connect backend-net gps-frontend
           """
         }
       }
