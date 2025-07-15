@@ -8,4 +8,10 @@ services:
     ports:
       - "8005:80"
     environment:
-      - API_BASE_URL=http://springboot-app:8080
+      - API_BASE_URL=http://gps-backend:8080
+    networks:
+      - backend-net
+
+networks:
+  backend-net:
+    external: true 
