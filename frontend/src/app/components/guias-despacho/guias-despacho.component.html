@@ -1,0 +1,39 @@
+<div class="form-container">
+  <h2>Registro de Guías de Despacho</h2>
+  <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
+    <label>Nº Guía *</label>
+    <input formControlName="numeroGuia" />
+    <label>ID Factura *</label>
+    <input type="number" formControlName="facturaId" />
+    <label>Transportista *</label>
+    <input formControlName="transportista" />
+    <label>Estado</label>
+    <select formControlName="estado">
+      <option value="PENDIENTE">PENDIENTE</option>
+      <option value="ENVIADA">ENVIADA</option>
+      <option value="ENTREGADA">ENTREGADA</option>
+    </select>
+    <button type="submit" [disabled]="formulario.invalid">Crear Guía</button>
+  </form>
+
+  <div *ngIf="successMessage" class="toast-success">
+    {{ successMessage }}<span class="toast-arrow"></span>
+  </div>
+  <div *ngIf="errorMessage" class="toast-error">
+    {{ errorMessage }}<span class="toast-arrow"></span>
+  </div>
+</div>
+
+<hr/>
+
+<h3>Listado de Guías</h3>
+<table>
+  <tr><th>Nº Guía</th><th>Factura</th><th>Transp.</th><th>Estado</th><th>Acc.</th></tr>
+  <tr *ngFor="let g of guias">
+    <td>{{ g.numeroGuia }}</td>
+    <td>{{ g.facturaId }}</td>
+    <td>{{ g.transportista }}</td>
+    <td>{{ g.estado }}</td>
+    <td><button (click)="eliminar(g.id!)">🗑️</button></td>
+  </tr>
+</table>

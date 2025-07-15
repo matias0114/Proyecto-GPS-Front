@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
+
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { MenuComponent } from './components/menu/menu.component';
@@ -10,7 +11,9 @@ import { PreciosComponent } from './components/precios/precios.component';
 import { PacientesComponent } from './components/pacientes/pacientes.component';
 import { FacturasComponent } from './components/facturas/facturas.component';
 import { HistorialPacienteComponent } from './components/historial-pacientes/historial-pacientes.component';
-import { ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ComprasComponent } from './components/compras/compras.component';
+import { GuiasDespachoComponent } from './components/guias-despacho/guias-despacho.component';
 
 @NgModule({
   declarations: [
@@ -20,13 +23,16 @@ import { ReactiveFormsModule } from '@angular/forms';
     PreciosComponent,
     PacientesComponent,
     FacturasComponent,
-    HistorialPacienteComponent
+    HistorialPacienteComponent,
+    ComprasComponent,
+    GuiasDespachoComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     ReactiveFormsModule,
-    HttpClientModule   // ← importado aquí
+    HttpClientModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
