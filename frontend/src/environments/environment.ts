@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiBase: 'http://localhost:8082/api'
+  apiBase: 'http://gps-backend:8080/api'
 };
