@@ -290,8 +290,8 @@
               </span>
             </td>
             <td class="actions">
-              <button class="btn-small btn-edit" (click)="editPrice(precio)" title="Editar">✏️</button>
-              <button class="btn-small btn-delete" (click)="deletePrice(precio.id!)" title="Eliminar">🗑️</button>
+              <button class="btn-small btn-edit" (click)="editPrice(precio)" title="Editar" [disabled]="loading">✏️</button>
+              <button class="btn-small btn-delete" (click)="deletePrice(precio.id!)" title="Eliminar" [disabled]="loading">🗑️</button>
             </td>
           </tr>
         </tbody>

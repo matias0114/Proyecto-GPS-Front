@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { PriceList } from '../models/price-list.model';
 import { environment } from '../../environments/environment';
 
@@ -37,14 +38,45 @@ export class PriceListService {
     return this.http.get<PriceList[]>(`${this.apiUrl}/date/${date}`);
   }
 
-  // Crear lista de precios
-  createPriceList(priceList: PriceList): Observable<PriceList> {
-    return this.http.post<PriceList>(this.apiUrl, priceList);
-  }
-
   // Actualizar lista de precios
   updatePriceList(id: number, priceList: PriceList): Observable<PriceList> {
-    return this.http.put<PriceList>(`${this.apiUrl}/${id}`, priceList);
+    console.log(`Actualizando precio con ID: ${id}`);
+    console.log('Datos enviados:', priceList);
+    return this.http.put<PriceList>(`${this.apiUrl}/${id}`, priceList)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  // Crear lista de precios
+  createPriceList(priceList: PriceList): Observable<PriceList> {
+    console.log('Creando nuevo precio');
+    console.log('Datos enviados:', priceList);
+    return this.http.post<PriceList>(this.apiUrl, priceList)
+      .pipe(
+        catchError(this.handleError)
+      );
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    console.error('Error en PriceListService:', error);
+    
+    let errorMessage = 'Error desconocido';
+    if (error.error instanceof ErrorEvent) {
+      // Error del lado del cliente
+      errorMessage = `Error del cliente: ${error.error.message}`;
+    } else {
+      // Error del lado del servidor
+      errorMessage = `Error del servidor: ${error.status} - ${error.message}`;
+      if (error.error && error.error.message) {
+        errorMessage += ` - ${error.error.message}`;
+      }
+      if (error.error && error.error.details) {
+        errorMessage += ` - ${error.error.details}`;
+      }
+    }
+    
+    return throwError(() => new Error(errorMessage));
   }
 
   // Eliminar lista de precios

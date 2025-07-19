@@ -56,7 +56,7 @@ export class PreciosComponent implements OnInit {
       warehouseId: [''],
       salePrice: [0, [Validators.required, Validators.min(0.01)]],
       costPrice: [0, [Validators.min(0)]],
-      marginPercentage: [0, [Validators.min(0), Validators.max(100)]],
+      marginPercentage: [0, [Validators.min(0), Validators.max(1000)]],
       validFrom: ['', [Validators.required]],
       validTo: [''],
       priceType: [PriceType.GENERAL, [Validators.required]],
@@ -197,6 +197,43 @@ export class PreciosComponent implements OnInit {
     }
   }
 
+  private cleanDataForSubmit(formValue: any, isUpdate: boolean = false): PriceList {
+    const cleanData: PriceList = {
+      name: formValue.name?.trim(),
+      productId: formValue.productId,
+      salePrice: Number(formValue.salePrice),
+      validFrom: new Date(formValue.validFrom + 'T00:00:00.000Z'),
+      active: formValue.active,
+      priceType: formValue.priceType,
+      pricingMethod: formValue.pricingMethod,
+      currency: formValue.currency
+    };
+
+    // Campos opcionales
+    if (formValue.warehouseId) {
+      cleanData.warehouseId = formValue.warehouseId;
+    }
+
+    if (formValue.costPrice && formValue.costPrice > 0) {
+      cleanData.costPrice = Number(formValue.costPrice);
+    }
+
+    if (formValue.marginPercentage && formValue.marginPercentage > 0) {
+      cleanData.marginPercentage = Number(formValue.marginPercentage);
+    }
+
+    if (formValue.validTo) {
+      cleanData.validTo = new Date(formValue.validTo + 'T23:59:59.999Z');
+    }
+
+    // Si es actualización, agregar el ID
+    if (isUpdate && this.editingPriceId) {
+      cleanData.id = this.editingPriceId;
+    }
+
+    return cleanData;
+  }
+
   onSubmit(): void {
     if (this.formularioPrecio.invalid) {
       this.markFormGroupTouched(this.formularioPrecio);
@@ -205,11 +242,12 @@ export class PreciosComponent implements OnInit {
     }
 
     this.loading = true;
-    const priceListData: PriceList = {
-      ...this.formularioPrecio.value,
-      validFrom: new Date(this.formularioPrecio.value.validFrom),
-      validTo: this.formularioPrecio.value.validTo ? new Date(this.formularioPrecio.value.validTo) : undefined
-    };
+    const formValue = this.formularioPrecio.value;
+    
+    // Limpiar y preparar los datos
+    const priceListData = this.cleanDataForSubmit(formValue, !!this.editingPriceId);
+
+    console.log('Datos enviados:', priceListData); // Para debug
 
     const saveMethod = this.editingPriceId
       ? this.priceListService.updatePriceList(this.editingPriceId, priceListData)
@@ -225,9 +263,16 @@ export class PreciosComponent implements OnInit {
       },
       error: (error) => {
         this.loading = false;
-        console.error('Error al guardar precio:', error);
+        console.error('Error completo:', error);
         const action = this.editingPriceId ? 'actualizar' : 'crear';
-        this.showMessage(`Error al ${action} precio`, 'error');
+        
+        // Mostrar error más específico si está disponible
+        let errorMessage = `Error al ${action} precio`;
+        if (error.message) {
+          errorMessage += `: ${error.message}`;
+        }
+        
+        this.showMessage(errorMessage, 'error');
       }
     });
   }
@@ -264,26 +309,54 @@ export class PreciosComponent implements OnInit {
       this.productService.getProductById(precio.productId).subscribe({
         next: (producto) => {
           this.selectedProducto = producto;
+          
+          // Formatear las fechas correctamente
+          const validFromDate = precio.validFrom ? new Date(precio.validFrom).toISOString().split('T')[0] : '';
+          const validToDate = precio.validTo ? new Date(precio.validTo).toISOString().split('T')[0] : '';
+          
           this.formularioPrecio.patchValue({
             name: precio.name,
             codigo: producto.code,
             nombreProducto: producto.name,
             productId: precio.productId,
-            warehouseId: precio.warehouseId,
+            warehouseId: precio.warehouseId || '',
             salePrice: precio.salePrice,
-            costPrice: precio.costPrice,
-            marginPercentage: precio.marginPercentage,
-            validFrom: precio.validFrom ? new Date(precio.validFrom).toISOString().split('T')[0] : '',
-            validTo: precio.validTo ? new Date(precio.validTo).toISOString().split('T')[0] : '',
-            priceType: precio.priceType,
-            pricingMethod: precio.pricingMethod,
-            currency: precio.currency,
-            active: precio.active
+            costPrice: precio.costPrice || 0,
+            marginPercentage: precio.marginPercentage || 0,
+            validFrom: validFromDate,
+            validTo: validToDate,
+            priceType: precio.priceType || PriceType.GENERAL,
+            pricingMethod: precio.pricingMethod || PricingMethod.LAST_PURCHASE,
+            currency: precio.currency || 'CLP',
+            active: precio.active !== false // Por defecto true si no está definido
           });
+          
+          console.log('Editando precio:', precio);
+          console.log('Formulario actualizado con:', this.formularioPrecio.value);
         },
         error: (error) => {
           console.error('Error al cargar producto para edición:', error);
+          this.showMessage('Error al cargar información del producto', 'error');
         }
+      });
+    } else {
+      // Si no hay productId, cargar directamente los datos disponibles
+      const validFromDate = precio.validFrom ? new Date(precio.validFrom).toISOString().split('T')[0] : '';
+      const validToDate = precio.validTo ? new Date(precio.validTo).toISOString().split('T')[0] : '';
+      
+      this.formularioPrecio.patchValue({
+        name: precio.name,
+        productId: precio.productId,
+        warehouseId: precio.warehouseId || '',
+        salePrice: precio.salePrice,
+        costPrice: precio.costPrice || 0,
+        marginPercentage: precio.marginPercentage || 0,
+        validFrom: validFromDate,
+        validTo: validToDate,
+        priceType: precio.priceType || PriceType.GENERAL,
+        pricingMethod: precio.pricingMethod || PricingMethod.LAST_PURCHASE,
+        currency: precio.currency || 'CLP',
+        active: precio.active !== false
       });
     }
   }
