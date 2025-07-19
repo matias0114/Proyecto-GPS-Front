@@ -1,45 +1,322 @@
 .inventario-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    background-color: #ffffff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
+  max-width: 1200px;
+  margin: 2rem auto;
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
 
-  .inventario-container h2 {
-    text-align: center;
-    color: #33691e;
-    margin-bottom: 1.5rem;
-  }
+.inventario-container h2 {
+  text-align: center;
+  color: #33691e;
+  margin-bottom: 1.5rem;
+}
 
-  .inventario-form .form-group {
-    margin-bottom: 1rem;
-  }
+.inventario-container h3 {
+  color: #33691e;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #558b2f;
+  padding-bottom: 0.5rem;
+}
 
-  .inventario-form label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-  }
+/* Alertas */
+.alert {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  border: 1px solid;
+}
 
-  .inventario-form input,
-  .inventario-form select {
+.alert-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+.alert-error {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+/* Formulario */
+.inventario-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.inventario-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.inventario-form input,
+.inventario-form select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.inventario-form input:focus,
+.inventario-form select:focus {
+  outline: none;
+  border-color: #558b2f;
+  box-shadow: 0 0 0 2px rgba(85, 139, 47, 0.2);
+}
+
+.inventario-form input.is-invalid,
+.inventario-form select.is-invalid {
+  border-color: #dc3545;
+}
+
+.invalid-feedback {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Grupo de inputs */
+.input-group {
+  display: flex;
+  align-items: stretch;
+}
+
+.input-group input {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.btn-search {
+  background-color: #558b2f;
+  color: white;
+  border: 1px solid #558b2f;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.btn-search:hover {
+  background-color: #33691e;
+  border-color: #33691e;
+}
+
+/* Información adicional */
+.info-general {
+  background-color: #e8f5e8;
+  padding: 1rem;
+  border-radius: 4px;
+  border-left: 4px solid #558b2f;
+  margin-bottom: 1rem;
+}
+
+.info-general p {
+  margin-bottom: 0.5rem;
+}
+
+.info-general p:last-child {
+  margin-bottom: 0;
+}
+
+/* Botones */
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.btn-cargar {
+  background-color: #558b2f;
+  color: white;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 180px;
+  justify-content: center;
+}
+
+.btn-cargar:hover:not(:disabled) {
+  background-color: #33691e;
+}
+
+.btn-cargar:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.btn-reset {
+  background-color: #6c757d;
+  color: white;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.btn-reset:hover {
+  background-color: #5a6268;
+}
+
+/* Spinner de carga */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ffffff;
+  border-top: 2px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Lista de inventarios */
+.inventario-list {
+  margin-top: 3rem;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.inventario-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.inventario-table th,
+.inventario-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.inventario-table th {
+  background-color: #558b2f;
+  color: white;
+  font-weight: bold;
+}
+
+.inventario-table tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* Badges */
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.badge-general {
+  background-color: #007bff;
+  color: white;
+}
+
+.badge-selectivo {
+  background-color: #28a745;
+  color: white;
+}
+
+.badge-barrido {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+/* Botones pequeños */
+.btn-small {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  margin: 0 0.25rem;
+  font-size: 1rem;
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+}
+
+.btn-edit:hover {
+  background-color: #e3f2fd;
+}
+
+.btn-delete:hover {
+  background-color: #ffebee;
+}
+
+/* Estado vacío */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.empty-state p {
+  margin-bottom: 0.5rem;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+  .inventario-container {
+    margin: 1rem;
+    padding: 1rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn-cargar,
+  .btn-reset {
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
+  }
+  
+  .input-group {
+    flex-direction: column;
+  }
+  
+  .input-group input {
     border-radius: 4px;
+    border-right: 1px solid #ccc;
+    margin-bottom: 0.5rem;
   }
-
-  .btn-cargar {
-    background-color: #558b2f;
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-    margin-top: 1rem;
-    display: block;
+  
+  .btn-search {
+    border-radius: 4px;
     width: 100%;
   }
+  
+  .inventario-table {
+    font-size: 0.875rem;
+  }
+  
+  .inventario-table th,
+  .inventario-table td {
+    padding: 0.5rem;
+  }
+}

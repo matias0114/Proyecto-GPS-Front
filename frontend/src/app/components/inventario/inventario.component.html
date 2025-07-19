@@ -1,36 +1,174 @@
 <div class="inventario-container">
-  <h2>Carga de Inventario</h2>
+  <h2>Gestión de Inventario</h2>
 
-  <form class="inventario-form">
-    <div class="form-group">
-      <label for="codigo">Código del Producto</label>
-      <input type="text" id="codigo" name="codigo" required />
-    </div>
+  <!-- Mensajes de estado -->
+  <div *ngIf="message" class="alert" [ngClass]="{'alert-success': messageType === 'success', 'alert-error': messageType === 'error'}">
+    {{ message }}
+  </div>
 
+  <!-- Formulario de inventario -->
+  <form [formGroup]="formularioInventario" (ngSubmit)="onSubmit()" class="inventario-form">
+    
+    <!-- Tipo de carga de inventario -->
     <div class="form-group">
-      <label for="nombre">Nombre del Producto</label>
-      <input type="text" id="nombre" name="nombre" required />
-    </div>
-
-    <div class="form-group">
-      <label for="cantidad">Cantidad en Stock</label>
-      <input type="number" id="cantidad" name="cantidad" required />
-    </div>
-
-    <div class="form-group">
-      <label for="ubicacion">Ubicación/Bodega</label>
-      <input type="text" id="ubicacion" name="ubicacion" />
-    </div>
-
-    <div class="form-group">
-      <label for="tipoCarga">Tipo de Carga</label>
-      <select id="tipoCarga" name="tipoCarga">
-        <option value="general">General</option>
-        <option value="selectivo">Selectivo</option>
-        <option value="barrido">Barrido</option>
+      <label for="tipoCarga">Tipo de Inventario</label>
+      <select id="tipoCarga" formControlName="tipoCarga" [class.is-invalid]="isFieldInvalid('tipoCarga')">
+        <option value="">Seleccione tipo de inventario</option>
+        <option *ngFor="let type of inventoryTypes" [value]="type.value">{{ type.label }}</option>
       </select>
+      <div *ngIf="isFieldInvalid('tipoCarga')" class="invalid-feedback">
+        {{ getFieldError('tipoCarga') }}
+      </div>
     </div>
 
-    <button type="submit" class="btn-cargar">Cargar Inventario</button>
+    <!-- Selección de bodega -->
+    <div class="form-group">
+      <label for="warehouseId">Bodega/Ubicación</label>
+      <select id="warehouseId" formControlName="warehouseId" [class.is-invalid]="isFieldInvalid('warehouseId')">
+        <option value="">Seleccione una bodega</option>
+        <option *ngFor="let bodega of bodegas" [value]="bodega.id">
+          {{ bodega.name }} - {{ bodega.location }}
+        </option>
+      </select>
+      <div *ngIf="isFieldInvalid('warehouseId')" class="invalid-feedback">
+        {{ getFieldError('warehouseId') }}
+      </div>
+    </div>
+
+    <!-- Campos específicos para inventario selectivo y barrido -->
+    <div *ngIf="formularioInventario.value.tipoCarga === 'SELECTIVO' || formularioInventario.value.tipoCarga === 'BARRIDO'">
+      
+      <!-- Código del producto -->
+      <div class="form-group">
+        <label for="codigo">Código del Producto</label>
+        <div class="input-group">
+          <input 
+            type="text" 
+            id="codigo" 
+            formControlName="codigo" 
+            [class.is-invalid]="isFieldInvalid('codigo')"
+            placeholder="Ingrese el código del producto"
+          />
+          <button type="button" class="btn-search" (click)="searchProduct()">Buscar</button>
+        </div>
+        <div *ngIf="isFieldInvalid('codigo')" class="invalid-feedback">
+          {{ getFieldError('codigo') }}
+        </div>
+      </div>
+
+      <!-- Nombre del producto -->
+      <div class="form-group">
+        <label for="nombreProducto">Nombre del Producto</label>
+        <input 
+          type="text" 
+          id="nombreProducto" 
+          formControlName="nombreProducto" 
+          [class.is-invalid]="isFieldInvalid('nombreProducto')"
+          readonly
+          placeholder="El nombre se completará automáticamente"
+        />
+        <div *ngIf="isFieldInvalid('nombreProducto')" class="invalid-feedback">
+          {{ getFieldError('nombreProducto') }}
+        </div>
+      </div>
+
+      <!-- Selección de lote -->
+      <div class="form-group" *ngIf="lotes.length > 0">
+        <label for="batchId">Lote</label>
+        <select id="batchId" formControlName="batchId" [class.is-invalid]="isFieldInvalid('batchId')">
+          <option value="">Seleccione un lote</option>
+          <option *ngFor="let lote of lotes" [value]="lote.id">
+            {{ lote.batchNumber }} - Vence: {{ lote.expirationDate | date:'dd/MM/yyyy' }}
+          </option>
+        </select>
+        <div *ngIf="isFieldInvalid('batchId')" class="invalid-feedback">
+          {{ getFieldError('batchId') }}
+        </div>
+      </div>
+
+      <!-- Cantidad -->
+      <div class="form-group">
+        <label for="cantidad">Cantidad Contada</label>
+        <input 
+          type="number" 
+          id="cantidad" 
+          formControlName="cantidad" 
+          [class.is-invalid]="isFieldInvalid('cantidad')"
+          min="0"
+          placeholder="Ingrese la cantidad contada"
+        />
+        <div *ngIf="isFieldInvalid('cantidad')" class="invalid-feedback">
+          {{ getFieldError('cantidad') }}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Información adicional para inventario general -->
+    <div *ngIf="formularioInventario.value.tipoCarga === 'GENERAL'" class="info-general">
+      <p><strong>Inventario General:</strong> Se procesarán todos los productos de la bodega seleccionada.</p>
+      <p>Este proceso puede tomar varios minutos dependiendo del número de productos.</p>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="form-actions">
+      <button 
+        type="submit" 
+        class="btn-cargar" 
+        [disabled]="loading || formularioInventario.invalid"
+      >
+        <span *ngIf="loading" class="spinner"></span>
+        {{ loading ? 'Procesando...' : 'Cargar Inventario' }}
+      </button>
+      
+      <button type="button" class="btn-reset" (click)="resetForm()">
+        Limpiar Formulario
+      </button>
+    </div>
   </form>
+
+  <!-- Lista de inventarios recientes -->
+  <div class="inventario-list" *ngIf="inventarios.length > 0">
+    <h3>Inventarios Recientes</h3>
+    
+    <div class="table-container">
+      <table class="inventario-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Bodega</th>
+            <th>Lote</th>
+            <th>Cantidad</th>
+            <th>Tipo</th>
+            <th>Última Actualización</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inventario of inventarios; let i = index">
+            <td>{{ getProductNameForInventory(inventario) }}</td>
+            <td>{{ inventario.warehouse?.name || 'N/A' }}</td>
+            <td>{{ inventario.batch?.batchNumber || 'N/A' }}</td>
+            <td>{{ inventario.quantity || 0 }}</td>
+            <td>
+              <span class="badge" [ngClass]="'badge-' + (inventario.inventoryType || '').toLowerCase()">
+                {{ inventario.inventoryType }}
+              </span>
+            </td>
+            <td>{{ inventario.lastUpdate | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>
+              <button class="btn-small btn-edit" title="Editar">✏️</button>
+              <button class="btn-small btn-delete" title="Eliminar">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Estado cuando no hay inventarios -->
+  <div *ngIf="inventarios.length === 0" class="empty-state">
+    <p>No se han registrado inventarios aún.</p>
+    <p>Utilice el formulario anterior para crear el primer registro de inventario.</p>
+  </div>
 </div>

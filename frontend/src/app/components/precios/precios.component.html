@@ -1,27 +1,307 @@
 <div class="precios-container">
-  <h2>Lista de Precios</h2>
+  <h2>Gestión de Lista de Precios</h2>
 
-  <form class="precios-form">
-    <div class="form-group">
-      <label for="codigo">Código de Producto</label>
-      <input type="text" id="codigo" name="codigo" placeholder="Ej: PRD-001" required />
+  <!-- Mensajes de estado -->
+  <div *ngIf="message" class="alert" [ngClass]="{'alert-success': messageType === 'success', 'alert-error': messageType === 'error'}">
+    {{ message }}
+  </div>
+
+  <!-- Controles superiores -->
+  <div class="controls-section">
+    <div class="toggle-section">
+      <label class="toggle-label">
+        <input type="checkbox" [(ngModel)]="showCurrentPricesOnly" (change)="toggleCurrentPricesOnly()">
+        Mostrar solo precios vigentes
+      </label>
+    </div>
+  </div>
+
+  <!-- Formulario de precios -->
+  <form [formGroup]="formularioPrecio" (ngSubmit)="onSubmit()" class="precios-form">
+    
+    <!-- Información básica -->
+    <div class="form-section">
+      <h3>Información del Precio</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Nombre del Precio</label>
+          <input 
+            type="text" 
+            id="name" 
+            formControlName="name" 
+            [class.is-invalid]="isFieldInvalid('name')"
+            placeholder="Ej: Precio Paracetamol 500mg - Enero 2024"
+          />
+          <div *ngIf="isFieldInvalid('name')" class="invalid-feedback">
+            {{ getFieldError('name') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="priceType">Tipo de Precio</label>
+          <select id="priceType" formControlName="priceType" [class.is-invalid]="isFieldInvalid('priceType')">
+            <option *ngFor="let type of priceTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+          <div *ngIf="isFieldInvalid('priceType')" class="invalid-feedback">
+            {{ getFieldError('priceType') }}
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="nombre">Nombre del Producto</label>
-      <input type="text" id="nombre" name="nombre" required />
+    <!-- Producto -->
+    <div class="form-section">
+      <h3>Producto</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="codigo">Código de Producto</label>
+          <div class="input-group">
+            <input 
+              type="text" 
+              id="codigo" 
+              formControlName="codigo" 
+              [class.is-invalid]="isFieldInvalid('codigo')"
+              placeholder="Ingrese código del producto"
+            />
+            <button type="button" class="btn-search" (click)="searchProduct()">Buscar</button>
+          </div>
+          <div *ngIf="isFieldInvalid('codigo')" class="invalid-feedback">
+            {{ getFieldError('codigo') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="nombreProducto">Nombre del Producto</label>
+          <input 
+            type="text" 
+            id="nombreProducto" 
+            formControlName="nombreProducto" 
+            [class.is-invalid]="isFieldInvalid('nombreProducto')"
+            readonly
+            placeholder="Se completará automáticamente"
+          />
+          <div *ngIf="isFieldInvalid('nombreProducto')" class="invalid-feedback">
+            {{ getFieldError('nombreProducto') }}
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="precio">Precio Unitario ($)</label>
-      <input type="number" id="precio" name="precio" min="0" required />
+    <!-- Bodega (opcional) -->
+    <div class="form-section">
+      <h3>Bodega (Opcional)</h3>
+      
+      <div class="form-group">
+        <label for="warehouseId">Bodega Específica</label>
+        <select id="warehouseId" formControlName="warehouseId">
+          <option value="">Aplicar a todas las bodegas</option>
+          <option *ngFor="let bodega of bodegas" [value]="bodega.id">
+            {{ bodega.name }} - {{ bodega.location }}
+          </option>
+        </select>
+        <small class="form-text">Si no selecciona una bodega, el precio se aplicará a todas.</small>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label for="vigencia">Fecha de Vigencia</label>
-      <input type="date" id="vigencia" name="vigencia" required />
+    <!-- Precios y márgenes -->
+    <div class="form-section">
+      <h3>Precios y Márgenes</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="costPrice">Precio de Costo ($)</label>
+          <input 
+            type="number" 
+            id="costPrice" 
+            formControlName="costPrice" 
+            [class.is-invalid]="isFieldInvalid('costPrice')"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+          />
+          <div *ngIf="isFieldInvalid('costPrice')" class="invalid-feedback">
+            {{ getFieldError('costPrice') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="marginPercentage">Margen (%)</label>
+          <input 
+            type="number" 
+            id="marginPercentage" 
+            formControlName="marginPercentage" 
+            [class.is-invalid]="isFieldInvalid('marginPercentage')"
+            min="0"
+            max="1000"
+            step="0.01"
+            placeholder="0.00"
+          />
+          <div *ngIf="isFieldInvalid('marginPercentage')" class="invalid-feedback">
+            {{ getFieldError('marginPercentage') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="salePrice">Precio de Venta ($)</label>
+          <input 
+            type="number" 
+            id="salePrice" 
+            formControlName="salePrice" 
+            [class.is-invalid]="isFieldInvalid('salePrice')"
+            min="0.01"
+            step="0.01"
+            placeholder="0.00"
+          />
+          <div *ngIf="isFieldInvalid('salePrice')" class="invalid-feedback">
+            {{ getFieldError('salePrice') }}
+          </div>
+        </div>
+      </div>
     </div>
 
-    <button type="submit" class="btn-guardar">Guardar Precio</button>
+    <!-- Fechas de vigencia -->
+    <div class="form-section">
+      <h3>Vigencia</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="validFrom">Fecha de Inicio</label>
+          <input 
+            type="date" 
+            id="validFrom" 
+            formControlName="validFrom" 
+            [class.is-invalid]="isFieldInvalid('validFrom')"
+          />
+          <div *ngIf="isFieldInvalid('validFrom')" class="invalid-feedback">
+            {{ getFieldError('validFrom') }}
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="validTo">Fecha de Fin (Opcional)</label>
+          <input 
+            type="date" 
+            id="validTo" 
+            formControlName="validTo" 
+            [class.is-invalid]="isFieldInvalid('validTo')"
+          />
+          <small class="form-text">Deje vacío si no tiene fecha de vencimiento</small>
+          <div *ngIf="isFieldInvalid('validTo')" class="invalid-feedback">
+            {{ getFieldError('validTo') }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuración adicional -->
+    <div class="form-section">
+      <h3>Configuración Adicional</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="pricingMethod">Método de Cálculo</label>
+          <select id="pricingMethod" formControlName="pricingMethod">
+            <option *ngFor="let method of pricingMethods" [value]="method.value">{{ method.label }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="currency">Moneda</label>
+          <select id="currency" formControlName="currency">
+            <option value="CLP">Peso Chileno (CLP)</option>
+            <option value="USD">Dólar Americano (USD)</option>
+            <option value="EUR">Euro (EUR)</option>
+          </select>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="active">
+            Precio Activo
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="form-actions">
+      <button 
+        type="submit" 
+        class="btn-guardar" 
+        [disabled]="loading || formularioPrecio.invalid"
+      >
+        <span *ngIf="loading" class="spinner"></span>
+        {{ loading ? 'Procesando...' : (editingPriceId ? 'Actualizar Precio' : 'Guardar Precio') }}
+      </button>
+      
+      <button type="button" class="btn-reset" (click)="resetForm()">
+        {{ editingPriceId ? 'Cancelar Edición' : 'Limpiar Formulario' }}
+      </button>
+    </div>
   </form>
+
+  <!-- Lista de precios -->
+  <div class="precios-list" *ngIf="precios.length > 0">
+    <h3>{{ showCurrentPricesOnly ? 'Precios Vigentes' : 'Lista de Precios' }}</h3>
+    
+    <div class="table-container">
+      <table class="precios-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Tipo</th>
+            <th>Precio Costo</th>
+            <th>Precio Venta</th>
+            <th>Margen</th>
+            <th>Vigencia</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let precio of precios; let i = index" 
+              [class.editing]="editingPriceId === precio.id">
+            <td>
+              <div class="product-info">
+                <strong>{{ precio.product?.name || 'N/A' }}</strong>
+                <small>{{ precio.product?.code }}</small>
+              </div>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="'badge-' + (precio.priceType || '').toLowerCase()">
+                {{ getPriceTypeLabel(precio.priceType!) }}
+              </span>
+            </td>
+            <td>{{ formatCurrency(precio.costPrice || 0) }}</td>
+            <td class="price-highlight">{{ formatCurrency(precio.salePrice) }}</td>
+            <td>{{ precio.marginPercentage | number:'1.1-2' }}%</td>
+            <td>
+              <div class="date-info">
+                <small>Desde: {{ precio.validFrom | date:'dd/MM/yyyy' }}</small>
+                <small *ngIf="precio.validTo">Hasta: {{ precio.validTo | date:'dd/MM/yyyy' }}</small>
+                <small *ngIf="!precio.validTo" class="no-expiry">Sin vencimiento</small>
+              </div>
+            </td>
+            <td>
+              <span class="status" [ngClass]="precio.active ? 'active' : 'inactive'">
+                {{ precio.active ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="actions">
+              <button class="btn-small btn-edit" (click)="editPrice(precio)" title="Editar">✏️</button>
+              <button class="btn-small btn-delete" (click)="deletePrice(precio.id!)" title="Eliminar">🗑️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Estado cuando no hay precios -->
+  <div *ngIf="precios.length === 0" class="empty-state">
+    <p>{{ showCurrentPricesOnly ? 'No hay precios vigentes.' : 'No se han registrado precios aún.' }}</p>
+    <p>Utilice el formulario anterior para crear el primer precio.</p>
+  </div>
 </div>
