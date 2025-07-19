@@ -265,8 +265,8 @@
               [class.editing]="editingPriceId === precio.id">
             <td>
               <div class="product-info">
-                <strong>{{ precio.product?.name || 'N/A' }}</strong>
-                <small>{{ precio.product?.code }}</small>
+                <strong>{{ getProductNameForPrice(precio) }}</strong>
+                <small>{{ getProductCodeForPrice(precio) }}</small>
               </div>
             </td>
             <td>

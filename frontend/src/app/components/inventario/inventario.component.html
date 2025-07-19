@@ -118,11 +118,11 @@
         [disabled]="loading || formularioInventario.invalid"
       >
         <span *ngIf="loading" class="spinner"></span>
-        {{ loading ? 'Procesando...' : 'Cargar Inventario' }}
+        {{ loading ? 'Procesando...' : (editingInventoryId ? 'Actualizar Inventario' : 'Cargar Inventario') }}
       </button>
       
       <button type="button" class="btn-reset" (click)="resetForm()">
-        Limpiar Formulario
+        {{ editingInventoryId ? 'Cancelar Edición' : 'Limpiar Formulario' }}
       </button>
     </div>
   </form>
@@ -157,8 +157,8 @@
             </td>
             <td>{{ inventario.lastUpdate | date:'dd/MM/yyyy HH:mm' }}</td>
             <td>
-              <button class="btn-small btn-edit" title="Editar">✏️</button>
-              <button class="btn-small btn-delete" title="Eliminar">🗑️</button>
+              <button class="btn-small btn-edit" title="Editar" (click)="editInventory(inventario)">✏️</button>
+              <button class="btn-small btn-delete" title="Eliminar" (click)="deleteInventory(inventario.id!)">🗑️</button>
             </td>
           </tr>
         </tbody>

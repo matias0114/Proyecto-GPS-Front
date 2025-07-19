@@ -368,4 +368,20 @@ export class PreciosComponent implements OnInit {
     const type = this.priceTypes.find(t => t.value === priceType);
     return type ? type.label : priceType;
   }
+
+  getProductNameForPrice(precio: PriceList): string {
+    if (precio.productId) {
+      const producto = this.productos.find(p => p.id === precio.productId);
+      return producto?.name || 'N/A';
+    }
+    return 'N/A';
+  }
+
+  getProductCodeForPrice(precio: PriceList): string {
+    if (precio.productId) {
+      const producto = this.productos.find(p => p.id === precio.productId);
+      return producto?.code || '';
+    }
+    return '';
+  }
 }
