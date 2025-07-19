@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Inventory, InventoryDTO, Warehouse, Batch } from '../models/inventory.model';
+import { Inventory, InventoryDTO, UpdateInventoryDTO, Warehouse, Batch } from '../models/inventory.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -43,8 +43,8 @@ export class InventoryService {
   }
 
   // Actualizar inventario
-  updateInventory(inventoryId: number, inventory: Inventory): Observable<Inventory> {
-    return this.http.put<Inventory>(`${this.apiUrl}/${inventoryId}`, inventory);
+  updateInventory(inventoryId: number, updateData: UpdateInventoryDTO): Observable<Inventory> {
+    return this.http.put<Inventory>(`${this.apiUrl}/${inventoryId}`, updateData);
   }
 
   // Eliminar inventario

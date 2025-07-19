@@ -4,7 +4,7 @@ import { InventoryService } from '../../services/inventory.service';
 import { ProductService } from '../../services/product.service';
 import { WarehouseService } from '../../services/warehouse.service';
 import { BatchService } from '../../services/batch.service';
-import { Inventory, InventoryDTO, Warehouse, Batch } from '../../models/inventory.model';
+import { Inventory, InventoryDTO, UpdateInventoryDTO, Warehouse, Batch } from '../../models/inventory.model';
 import { Product } from '../../models/product.model';
 
 @Component({
@@ -39,10 +39,10 @@ export class InventarioComponent implements OnInit {
     private batchService: BatchService
   ) {
     this.formularioInventario = this.fb.group({
-      codigo: ['', [Validators.required]],
-      nombreProducto: ['', [Validators.required]],
-      cantidad: [0, [Validators.required, Validators.min(0)]],
-      ubicacion: ['', [Validators.required]],
+      codigo: [''],
+      nombreProducto: [''],
+      cantidad: [0],
+      ubicacion: [''],
       tipoCarga: ['GENERAL', [Validators.required]],
       batchId: [''],
       warehouseId: ['', [Validators.required]],
@@ -63,6 +63,11 @@ export class InventarioComponent implements OnInit {
   }
 
   private setupFormSubscriptions(): void {
+    // Suscribirse a cambios en el tipo de carga para actualizar validaciones
+    this.formularioInventario.get('tipoCarga')?.valueChanges.subscribe(tipoCarga => {
+      this.updateFormValidations(tipoCarga);
+    });
+
     // Suscribirse a cambios en el código del producto
     this.formularioInventario.get('codigo')?.valueChanges.subscribe(codigo => {
       if (codigo) {
@@ -77,6 +82,37 @@ export class InventarioComponent implements OnInit {
         this.selectedBodega = this.bodegas.find(b => b.id === Number(warehouseId)) || null;
       }
     });
+
+    // Aplicar validaciones iniciales
+    this.updateFormValidations('GENERAL');
+  }
+
+  private updateFormValidations(tipoCarga: string): void {
+    const codigoControl = this.formularioInventario.get('codigo');
+    const nombreProductoControl = this.formularioInventario.get('nombreProducto');
+    const cantidadControl = this.formularioInventario.get('cantidad');
+    const batchIdControl = this.formularioInventario.get('batchId');
+
+    // Limpiar validadores existentes
+    codigoControl?.clearValidators();
+    nombreProductoControl?.clearValidators();
+    cantidadControl?.clearValidators();
+    batchIdControl?.clearValidators();
+
+    if (tipoCarga === 'SELECTIVO' || tipoCarga === 'BARRIDO') {
+      // Para inventario selectivo y barrido, estos campos son requeridos
+      codigoControl?.setValidators([Validators.required]);
+      nombreProductoControl?.setValidators([Validators.required]);
+      cantidadControl?.setValidators([Validators.required, Validators.min(0)]);
+      batchIdControl?.setValidators([Validators.required]);
+    }
+    // Para inventario general, no se requieren campos específicos del producto
+
+    // Actualizar estado de validación
+    codigoControl?.updateValueAndValidity();
+    nombreProductoControl?.updateValueAndValidity();
+    cantidadControl?.updateValueAndValidity();
+    batchIdControl?.updateValueAndValidity();
   }
 
   private loadProducts(): void {
@@ -166,9 +202,14 @@ export class InventarioComponent implements OnInit {
     const formValues = this.formularioInventario.value;
     const tipoCarga = formValues.tipoCarga;
 
-    // Si estamos editando, actualizar inventario existente
+    // Si estamos editando, mostrar confirmación y actualizar inventario existente
     if (this.editingInventoryId) {
-      this.updateInventory(formValues);
+      const confirmMessage = `¿Está seguro de que desea actualizar este inventario a la cantidad ${formValues.cantidad}?`;
+      if (confirm(confirmMessage)) {
+        this.updateInventory(formValues);
+      } else {
+        this.loading = false;
+      }
       return;
     }
 
@@ -295,10 +336,14 @@ export class InventarioComponent implements OnInit {
     this.selectedBodega = null;
     this.selectedLote = null;
     this.editingInventoryId = null;
+    
+    // Aplicar validaciones para el tipo de inventario por defecto
+    this.updateFormValidations('GENERAL');
   }
 
   editInventory(inventario: Inventory): void {
     this.editingInventoryId = inventario.id || null;
+    this.showMessage('Cargando datos para edición...', 'success');
     
     // Buscar el producto relacionado al lote
     if (inventario.batch?.productId) {
@@ -307,6 +352,7 @@ export class InventarioComponent implements OnInit {
           this.selectedProducto = producto;
           this.onWarehouseSelect(inventario.warehouse!);
           
+          // Llenar el formulario con los datos del inventario a editar
           this.formularioInventario.patchValue({
             tipoCarga: inventario.inventoryType || 'SELECTIVO',
             codigo: producto.code,
@@ -317,12 +363,31 @@ export class InventarioComponent implements OnInit {
             batchId: inventario.batch?.id,
             lote: inventario.batch?.batchNumber
           });
+          
+          // Actualizar las validaciones para el tipo de inventario
+          this.updateFormValidations(inventario.inventoryType || 'SELECTIVO');
+          
+          this.showMessage('Inventario cargado para edición. Modifique la cantidad y presione "Actualizar"', 'success');
         },
         error: (error) => {
           console.error('Error al cargar producto para edición:', error);
           this.showMessage('Error al cargar datos del producto', 'error');
+          this.editingInventoryId = null;
         }
       });
+    } else {
+      // Si no hay productId, llenar lo que se pueda
+      this.formularioInventario.patchValue({
+        tipoCarga: inventario.inventoryType || 'SELECTIVO',
+        cantidad: inventario.quantity,
+        warehouseId: inventario.warehouse?.id,
+        ubicacion: inventario.warehouse?.name,
+        batchId: inventario.batch?.id,
+        lote: inventario.batch?.batchNumber
+      });
+      
+      this.updateFormValidations(inventario.inventoryType || 'SELECTIVO');
+      this.showMessage('Inventario cargado para edición. Modifique la cantidad y presione "Actualizar"', 'success');
     }
   }
 
@@ -348,24 +413,27 @@ export class InventarioComponent implements OnInit {
       return;
     }
 
-    // Encontrar el inventario original para preservar los datos existentes
-    const originalInventory = this.inventarios.find(inv => inv.id === this.editingInventoryId);
-    if (!originalInventory) {
+    // Validar que la cantidad sea válida
+    const cantidad = formValues.cantidad;
+    if (!cantidad || cantidad < 0) {
       this.loading = false;
-      this.showMessage('Error: No se encontró el inventario original', 'error');
+      this.showMessage('Error: La cantidad debe ser mayor o igual a 0', 'error');
       return;
     }
 
-    const updatedInventory: Inventory = {
-      ...originalInventory,
-      quantity: formValues.cantidad,
-      currentStock: formValues.cantidad,
-      lastUpdate: new Date()
+    // Crear un objeto UpdateInventoryDTO que coincida exactamente con lo que espera el backend
+    // IMPORTANTE: Solo enviar los campos quantity y currentStock, ningún otro campo
+    const updateData: UpdateInventoryDTO = {
+      quantity: cantidad,
+      currentStock: cantidad
     };
 
-    this.inventoryService.updateInventory(this.editingInventoryId, updatedInventory).subscribe({
+    console.log('Datos a enviar para actualización:', updateData);
+
+    this.inventoryService.updateInventory(this.editingInventoryId, updateData).subscribe({
       next: (inventario) => {
         this.loading = false;
+        console.log('Inventario actualizado exitosamente:', inventario);
         this.showMessage('Inventario actualizado exitosamente', 'success');
         this.loadInventories();
         this.resetForm();
@@ -373,7 +441,18 @@ export class InventarioComponent implements OnInit {
       error: (error) => {
         this.loading = false;
         console.error('Error al actualizar inventario:', error);
-        this.showMessage('Error al actualizar inventario', 'error');
+        
+        // Mostrar mensaje de error más específico
+        let errorMessage = 'Error al actualizar inventario';
+        if (error.status === 400) {
+          errorMessage = 'Error: Datos inválidos. Verifique la cantidad ingresada.';
+        } else if (error.status === 404) {
+          errorMessage = 'Error: Inventario no encontrado.';
+        } else if (error.status === 415) {
+          errorMessage = 'Error: Formato de datos incorrecto.';
+        }
+        
+        this.showMessage(errorMessage, 'error');
       }
     });
   }
@@ -410,10 +489,19 @@ export class InventarioComponent implements OnInit {
   }
 
   getProductNameForInventory(inventario: Inventory): string {
+    // Obtener el nombre del producto directamente desde batch.product
+    if (inventario.batch?.product?.name) {
+      return inventario.batch.product.name;
+    }
+    
+    // Fallback: buscar por productId en la lista de productos cargados (por si acaso)
     if (inventario.batch?.productId) {
       const producto = this.productos.find(p => p.id === inventario.batch?.productId);
-      return producto?.name || 'N/A';
+      if (producto?.name) {
+        return producto.name;
+      }
     }
+    
     return 'N/A';
   }
 }
