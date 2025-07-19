@@ -8,16 +8,195 @@
 
   <!-- Controles superiores -->
   <div class="controls-section">
-    <div class="toggle-section">
-      <label class="toggle-label">
-        <input type="checkbox" [(ngModel)]="showCurrentPricesOnly" (change)="toggleCurrentPricesOnly()">
-        Mostrar solo precios vigentes
-      </label>
+    <div class="controls-header">
+      <div class="toggle-section">
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="showCurrentPricesOnly" (change)="toggleCurrentPricesOnly()">
+          Mostrar solo precios vigentes
+        </label>
+      </div>
+      
+      <div class="filter-controls">
+        <button type="button" class="btn-filter" (click)="toggleFiltersPanel()">
+          {{ showFiltersPanel ? '🔼' : '🔽' }} Filtros Avanzados
+        </button>
+        <button type="button" class="btn-filter" (click)="toggleFormPanel()">
+          {{ showFormPanel ? '🔼' : '🔽' }} {{ editingPriceId ? 'Editar Precio' : 'Nuevo Precio' }}
+        </button>
+        <button type="button" class="btn-export" (click)="exportFilteredData()">
+          📊 Exportar
+        </button>
+      </div>
+    </div>
+
+    <!-- Panel de filtros -->
+    <div class="filters-panel" [class.expanded]="showFiltersPanel">
+      <div class="filters-content">
+        <h4>Filtros de Búsqueda</h4>
+        
+        <div class="filters-row">
+          <!-- Filtros de producto -->
+          <div class="filter-group">
+            <label>Código de Producto</label>
+            <input 
+              type="text" 
+              [(ngModel)]="filters.productCode" 
+              (input)="onFilterChange()"
+              placeholder="Buscar por código..."
+              class="filter-input"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label>Nombre de Producto</label>
+            <input 
+              type="text" 
+              [(ngModel)]="filters.productName" 
+              (input)="onFilterChange()"
+              placeholder="Buscar por nombre..."
+              class="filter-input"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label>Tipo de Precio</label>
+            <select [(ngModel)]="filters.priceType" (change)="onFilterChange()" class="filter-select">
+              <option value="">Todos los tipos</option>
+              <option *ngFor="let type of priceTypes" [value]="type.value">{{ type.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filters-row">
+          <!-- Filtros de bodega -->
+          <div class="filter-group">
+            <label>Bodega</label>
+            <select [(ngModel)]="filters.warehouse" (change)="onFilterChange()" class="filter-select">
+              <option value="">Todas las bodegas</option>
+              <option value="all">Solo precios generales</option>
+              <option value="specific">Solo precios específicos</option>
+              <option *ngFor="let bodega of bodegas" [value]="bodega.id">{{ bodega.name }}</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Moneda</label>
+            <select [(ngModel)]="filters.currency" (change)="onFilterChange()" class="filter-select">
+              <option value="">Todas las monedas</option>
+              <option value="CLP">Peso Chileno (CLP)</option>
+              <option value="USD">Dólar Americano (USD)</option>
+              <option value="EUR">Euro (EUR)</option>
+            </select>
+          </div>
+
+          <div class="filter-group checkbox-filter">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="filters.activeOnly" 
+                (change)="onFilterChange()"
+              />
+              Solo precios activos
+            </label>
+          </div>
+        </div>
+
+        <div class="filters-row">
+          <!-- Filtros de precio -->
+          <div class="filter-group">
+            <label>Precio de Venta Mínimo ($)</label>
+            <input 
+              type="number" 
+              [(ngModel)]="filters.minPrice" 
+              (input)="onFilterChange()"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              class="filter-input"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label>Precio de Venta Máximo ($)</label>
+            <input 
+              type="number" 
+              [(ngModel)]="filters.maxPrice" 
+              (input)="onFilterChange()"
+              min="0"
+              step="0.01"
+              placeholder="Sin límite"
+              class="filter-input"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label>Precio de Costo Mínimo ($)</label>
+            <input 
+              type="number" 
+              [(ngModel)]="filters.minCostPrice" 
+              (input)="onFilterChange()"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              class="filter-input"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label>Precio de Costo Máximo ($)</label>
+            <input 
+              type="number" 
+              [(ngModel)]="filters.maxCostPrice" 
+              (input)="onFilterChange()"
+              min="0"
+              step="0.01"
+              placeholder="Sin límite"
+              class="filter-input"
+            />
+          </div>
+        </div>
+
+        <div class="filters-row">
+          <!-- Filtros de fecha -->
+          <div class="filter-group">
+            <label>Vigente desde</label>
+            <input 
+              type="date" 
+              [(ngModel)]="filters.dateFrom" 
+              (change)="onFilterChange()"
+              class="filter-input"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label>Vigente hasta</label>
+            <input 
+              type="date" 
+              [(ngModel)]="filters.dateTo" 
+              (change)="onFilterChange()"
+              class="filter-input"
+            />
+          </div>
+        </div>
+
+        <div class="filters-actions">
+          <button type="button" class="btn-clear-filters" (click)="clearFilters()">
+            🗑️ Limpiar Filtros
+          </button>
+          
+          <div class="filter-results">
+            Mostrando {{ getFilteredPreciosCount() }} de {{ getTotalPreciosCount() }} precios
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Formulario de precios -->
-  <form [formGroup]="formularioPrecio" (ngSubmit)="onSubmit()" class="precios-form">
+  <!-- Panel de formulario -->
+  <div class="form-panel" [class.expanded]="showFormPanel">
+    <div class="form-content">
+      <!-- Formulario de precios -->
+      <form [formGroup]="formularioPrecio" (ngSubmit)="onSubmit()" class="precios-form">
     
     <!-- Información básica -->
     <div class="form-section">
@@ -241,9 +420,11 @@
       </button>
     </div>
   </form>
+    </div>
+  </div>
 
   <!-- Lista de precios -->
-  <div class="precios-list" *ngIf="precios.length > 0">
+  <div class="precios-list" *ngIf="filteredPrecios.length > 0">
     <h3>{{ showCurrentPricesOnly ? 'Precios Vigentes' : 'Lista de Precios' }}</h3>
     
     <div class="table-container">
@@ -261,7 +442,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let precio of precios; let i = index" 
+          <tr *ngFor="let precio of filteredPrecios; let i = index" 
               [class.editing]="editingPriceId === precio.id">
             <td>
               <div class="product-info">
@@ -299,7 +480,15 @@
     </div>
   </div>
 
-  <!-- Estado cuando no hay precios -->
+  <!-- Estado cuando no hay precios después de filtrar -->
+  <div *ngIf="filteredPrecios.length === 0 && precios.length > 0" class="empty-state">
+    <p>No se encontraron precios que coincidan con los filtros aplicados.</p>
+    <button type="button" class="btn-clear-filters" (click)="clearFilters()">
+      🗑️ Limpiar Filtros
+    </button>
+  </div>
+
+  <!-- Estado cuando no hay precios en absoluto -->
   <div *ngIf="precios.length === 0" class="empty-state">
     <p>{{ showCurrentPricesOnly ? 'No hay precios vigentes.' : 'No se han registrado precios aún.' }}</p>
     <p>Utilice el formulario anterior para crear el primer precio.</p>

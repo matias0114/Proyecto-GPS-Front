@@ -42,6 +42,27 @@ export class PreciosComponent implements OnInit {
   showCurrentPricesOnly = false;
   editingPriceId: number | null = null;
 
+  // Variables para controles de interfaz
+  showFiltersPanel = false;
+  showFormPanel = false;
+
+  // Variables para filtros
+  filteredPrecios: PriceList[] = [];
+  filters = {
+    productCode: '',
+    productName: '',
+    priceType: '',
+    warehouse: '',
+    minPrice: null as number | null,
+    maxPrice: null as number | null,
+    minCostPrice: null as number | null,
+    maxCostPrice: null as number | null,
+    currency: '',
+    activeOnly: false,
+    dateFrom: '',
+    dateTo: ''
+  };
+
   constructor(
     private fb: FormBuilder,
     private priceListService: PriceListService,
@@ -141,6 +162,8 @@ export class PreciosComponent implements OnInit {
     loadMethod.subscribe({
       next: (precios) => {
         this.precios = precios;
+        this.filteredPrecios = [...precios];
+        this.applyFilters();
       },
       error: (error) => {
         console.error('Error al cargar precios:', error);
@@ -456,5 +479,137 @@ export class PreciosComponent implements OnInit {
       return producto?.code || '';
     }
     return '';
+  }
+
+  // Métodos de filtrado
+  toggleFilters(): void {
+    this.showFiltersPanel = !this.showFiltersPanel;
+  }
+
+  applyFilters(): void {
+    this.filteredPrecios = this.precios.filter(precio => {
+      // Filtro por código de producto
+      if (this.filters.productCode) {
+        const productCode = this.getProductCodeForPrice(precio);
+        if (!productCode.toLowerCase().includes(this.filters.productCode.toLowerCase())) {
+          return false;
+        }
+      }
+
+      // Filtro por nombre de producto
+      if (this.filters.productName) {
+        const productName = this.getProductNameForPrice(precio);
+        if (!productName.toLowerCase().includes(this.filters.productName.toLowerCase())) {
+          return false;
+        }
+      }
+
+      // Filtro por tipo de precio
+      if (this.filters.priceType && precio.priceType !== this.filters.priceType) {
+        return false;
+      }
+
+      // Filtro por bodega
+      if (this.filters.warehouse) {
+        if (this.filters.warehouse === 'all') {
+          if (precio.warehouseId) return false;
+        } else if (this.filters.warehouse === 'specific') {
+          if (!precio.warehouseId) return false;
+        } else {
+          if (precio.warehouseId !== Number(this.filters.warehouse)) return false;
+        }
+      }
+
+      // Filtro por precio de venta mínimo
+      if (this.filters.minPrice !== null && precio.salePrice < this.filters.minPrice) {
+        return false;
+      }
+
+      // Filtro por precio de venta máximo
+      if (this.filters.maxPrice !== null && precio.salePrice > this.filters.maxPrice) {
+        return false;
+      }
+
+      // Filtro por precio de costo mínimo
+      if (this.filters.minCostPrice !== null && (precio.costPrice || 0) < this.filters.minCostPrice) {
+        return false;
+      }
+
+      // Filtro por precio de costo máximo
+      if (this.filters.maxCostPrice !== null && (precio.costPrice || 0) > this.filters.maxCostPrice) {
+        return false;
+      }
+
+      // Filtro por moneda
+      if (this.filters.currency && precio.currency !== this.filters.currency) {
+        return false;
+      }
+
+      // Filtro por solo activos
+      if (this.filters.activeOnly && !precio.active) {
+        return false;
+      }
+
+      // Filtro por fecha desde
+      if (this.filters.dateFrom) {
+        const fechaFiltro = new Date(this.filters.dateFrom);
+        const fechaPrecio = new Date(precio.validFrom);
+        if (fechaPrecio < fechaFiltro) return false;
+      }
+
+      // Filtro por fecha hasta
+      if (this.filters.dateTo) {
+        const fechaFiltro = new Date(this.filters.dateTo);
+        const fechaPrecio = precio.validTo ? new Date(precio.validTo) : new Date();
+        if (fechaPrecio > fechaFiltro) return false;
+      }
+
+      return true;
+    });
+  }
+
+  clearFilters(): void {
+    this.filters = {
+      productCode: '',
+      productName: '',
+      priceType: '',
+      warehouse: '',
+      minPrice: null,
+      maxPrice: null,
+      minCostPrice: null,
+      maxCostPrice: null,
+      currency: '',
+      activeOnly: false,
+      dateFrom: '',
+      dateTo: ''
+    };
+    this.applyFilters();
+  }
+
+  // Métodos para controlar paneles colapsibles
+  toggleFiltersPanel(): void {
+    this.showFiltersPanel = !this.showFiltersPanel;
+  }
+
+  toggleFormPanel(): void {
+    this.showFormPanel = !this.showFormPanel;
+  }
+
+  onFilterChange(): void {
+    this.applyFilters();
+  }
+
+  getFilteredPreciosCount(): number {
+    return this.filteredPrecios.length;
+  }
+
+  getTotalPreciosCount(): number {
+    return this.precios.length;
+  }
+
+  exportFilteredData(): void {
+    // Implementar exportación si es necesario
+    console.log('Exportando datos filtrados:', this.filteredPrecios);
+    this.showMessage('Función de exportación en desarrollo', 'error');
   }
 }
