@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gps-frontend
+    ports:
+      - "8005:80"
+    networks:
+      - backend-net
+    # Comentamos la dependencia del backend por ahora
+    # depends_on:
+    #   - backend
+
+networks:
+  backend-net:
+    external: true
