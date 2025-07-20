@@ -10,10 +10,14 @@ import { FacturasComponent } from './components/facturas/facturas.component';
 import { ComprasComponent } from './components/compras/compras.component';
 import { PreciosComponent } from './components/precios/precios.component';
 import { GuiasDespachoComponent } from './components/guias-despacho/guias-despacho.component';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { ReportesComponent } from './components/reportes/reportes.component';
 
 // Definir rutas
 const routes: Routes = [
-  { path: '', redirectTo: '/menu', pathMatch: 'full' },
+  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
+  { path: 'dashboard', component: DashboardComponent },
+  { path: 'reportes', component: ReportesComponent },
   { path: 'menu', component: MenuComponent },
   { path: 'pacientes', component: PacientesComponent },
   { path: 'historial-pacientes', component: HistorialPacienteComponent },

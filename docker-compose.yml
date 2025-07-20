@@ -16,6 +16,20 @@ services:
     # Si no tienes backend, usaremos nginx para simular respuestas
     command: ["echo", "Backend container - replace with actual backend image"]
     
+  dashboard:
+    # image: tu-dashboard-image:latest  # Reemplaza con tu imagen real del dashboard
+    container_name: microservicio-dashboard
+    ports:
+      - "8085:8085"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/gps_db
+    networks:
+      - backend-net
+    depends_on:
+      - postgres
+    # Comentar esta línea hasta que tengas la imagen del dashboard
+    command: ["echo", "Dashboard container - replace with actual dashboard image"]
+    
   frontend:
     build:
       context: ./frontend
@@ -29,6 +43,7 @@ services:
       - backend-net
     depends_on:
       - backend
+      - dashboard
       
   postgres:
     image: postgres:15

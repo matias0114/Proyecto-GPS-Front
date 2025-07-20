@@ -13,6 +13,8 @@ import { HistorialPacienteComponent } from './components/historial-pacientes/his
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ComprasComponent } from './components/compras/compras.component';
 import { GuiasDespachoComponent } from './components/guias-despacho/guias-despacho.component';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { ReportesComponent } from './components/reportes/reportes.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +26,9 @@ import { GuiasDespachoComponent } from './components/guias-despacho/guias-despac
     FacturasComponent,
     HistorialPacienteComponent,
     ComprasComponent,
-    GuiasDespachoComponent
+    GuiasDespachoComponent,
+    DashboardComponent,
+    ReportesComponent
   ],
   imports: [
     BrowserModule,
