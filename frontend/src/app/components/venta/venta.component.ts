@@ -28,12 +28,21 @@ export interface ItemVenta {
 }
 
 export interface VentaRequest {
-  clienteRut?: string;
-  clienteNombre?: string;
-  items: ItemVenta[];
-  total: number;
-  metodoPago: string;
-  observaciones?: string;
+  patientRut?: string;
+  patientName?: string;
+  paymentMethod: string;
+  observations?: string;
+  subtotal: number;
+  taxes: number;
+  totalAmount: number;
+  saleItems: {
+    productId: number;
+    batchId: number;
+    warehouseId: number;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+  }[];
 }
 
 export interface VentaResponse {
@@ -42,13 +51,20 @@ export interface VentaResponse {
   fecha: string;
   clienteRut?: string;
   clienteNombre?: string;
+  patientRut?: string;
+  patientName?: string;
   items: ItemVenta[];
   subtotal: number;
   impuestos: number;
+  taxes?: number;
   total: number;
+  totalAmount?: number;
   metodoPago: string;
+  paymentMethod?: string;
   estado: string;
+  status?: string;
   observaciones?: string;
+  observations?: string;
 }
 
 @Component({
@@ -187,61 +203,168 @@ export class VentaComponent implements OnInit {
     if (producto) {
       const itemControl = this.itemsArray.at(index);
       
-      // Primero intentamos obtener el precio desde la lista de precios
-      this.ventaService.obtenerPrecioActualProducto(id).subscribe({
-        next: (listas: any[]) => {
-          console.log('Listas de precios obtenidas para producto', id, ':', listas);
-          
-          let precioUnitario = producto.precio; // Precio por defecto
-          
-          // Buscar el precio actual vigente
-          const fechaActual = new Date();
-          const listaVigente = listas.find(lista => {
-            const validFrom = lista.validFrom ? new Date(lista.validFrom) : null;
-            const validTo = lista.validTo ? new Date(lista.validTo) : null;
-            
-            const vigente = lista.active === true &&
-                           (validFrom === null || fechaActual >= validFrom) &&
-                           (validTo === null || fechaActual <= validTo);
-                           
-            console.log('Verificando lista:', {
-              id: lista.id,
-              name: lista.name,
-              salePrice: lista.salePrice,
-              active: lista.active,
-              validFrom: validFrom,
-              validTo: validTo,
-              vigente: vigente
-            });
-            
-            return vigente;
-          });
-          
-          if (listaVigente && listaVigente.salePrice) {
-            precioUnitario = listaVigente.salePrice;
-            console.log('Precio obtenido desde lista de precios:', precioUnitario);
-            this.showMessage(`Precio actualizado desde lista "${listaVigente.name}": ${this.formatCurrency(precioUnitario)}`, 'success');
-          } else {
-            console.log('No se encontró lista de precios vigente, usando precio base:', precioUnitario);
-            this.showMessage('Usando precio base del producto (no hay lista de precios vigente)', 'error');
-          }
-          
-          itemControl.patchValue({
-            precioUnitario: precioUnitario
-          });
-          this.calcularSubtotalItem(index);
-        },
-        error: (error: any) => {
-          console.error('Error obteniendo precio desde lista de precios:', error);
-          // Usar precio por defecto del producto
-          itemControl.patchValue({
-            precioUnitario: producto.precio
-          });
-          this.calcularSubtotalItem(index);
-          this.showMessage('Error consultando lista de precios, usando precio base', 'error');
+      console.log('🏷️ Buscando precio para producto:', {
+        id: id,
+        nombre: producto.nombre,
+        precioBase: producto.precio
+      });
+      
+      // Estrategia múltiple para obtener el precio correcto
+      this.obtenerPrecioProducto(id, producto).then((precio) => {
+        console.log('💰 Precio final asignado:', precio);
+        
+        itemControl.patchValue({
+          precioUnitario: precio.valor
+        });
+        this.calcularSubtotalItem(index);
+        
+        // Mostrar mensaje informativo
+        if (precio.origen !== 'precio base') {
+          this.showMessage(`Precio aplicado desde ${precio.origen}: ${this.formatCurrency(precio.valor)}`, 'success');
         }
+      }).catch((error) => {
+        console.error('❌ Error obteniendo precio:', error);
+        // Fallback final: usar precio base
+        itemControl.patchValue({
+          precioUnitario: producto.precio
+        });
+        this.calcularSubtotalItem(index);
+        this.showMessage('Error obteniendo precio, usando precio base del producto', 'error');
       });
     }
+  }
+
+  /**
+   * Obtiene el precio de un producto probando diferentes fuentes
+   */
+  private async obtenerPrecioProducto(productoId: number, producto: any): Promise<{valor: number, origen: string}> {
+    try {
+      // Primer intento: consultar listas de precios específicas del producto
+      console.log('🔍 Intentando obtener precio desde listas específicas del producto...');
+      const listas = await this.ventaService.obtenerPrecioActualProducto(productoId).toPromise();
+      
+      if (listas && listas.length > 0) {
+        console.log('📋 Listas específicas encontradas:', listas);
+        const precio = this.buscarPrecioVigente(listas);
+        if (precio) {
+          return precio;
+        }
+      }
+      
+      // Segundo intento: consultar todas las listas de precios vigentes
+      console.log('🔍 Intentando obtener precio desde listas generales...');
+      const listasGenerales = await this.ventaService.obtenerPreciosActuales().toPromise();
+      
+      if (listasGenerales && listasGenerales.length > 0) {
+        console.log('📋 Listas generales encontradas:', listasGenerales);
+        // Filtrar por producto
+        const listasDelProducto = listasGenerales.filter((lista: any) => 
+          lista.product?.id === productoId || lista.productId === productoId
+        );
+        
+        if (listasDelProducto.length > 0) {
+          console.log('📋 Listas filtradas por producto:', listasDelProducto);
+          const precio = this.buscarPrecioVigente(listasDelProducto);
+          if (precio) {
+            return precio;
+          }
+        }
+      }
+      
+      // Fallback: usar precio base del producto
+      console.log('🔄 Usando precio base del producto como fallback');
+      return {
+        valor: producto.precio,
+        origen: 'precio base del producto'
+      };
+      
+    } catch (error) {
+      console.error('❌ Error en obtenerPrecioProducto:', error);
+      // Fallback final
+      return {
+        valor: producto.precio,
+        origen: 'precio base del producto (error en consulta)'
+      };
+    }
+  }
+
+  /**
+   * Busca el precio vigente en una lista de precios
+   */
+  private buscarPrecioVigente(listas: any[]): {valor: number, origen: string} | null {
+    const fechaActual = new Date();
+    
+    // Filtrar listas activas y vigentes, ordenar por fecha más reciente
+    const listasVigentes = listas
+      .filter(lista => {
+        if (!lista.active) {
+          console.log('❌ Lista inactiva:', lista.id, lista.name);
+          return false;
+        }
+        
+        const validFrom = lista.validFrom ? new Date(lista.validFrom) : null;
+        const validTo = lista.validTo ? new Date(lista.validTo) : null;
+        
+        const estaVigente = (validFrom === null || fechaActual >= validFrom) &&
+                          (validTo === null || fechaActual <= validTo);
+        
+        console.log('🔍 Evaluando lista:', {
+          id: lista.id,
+          name: lista.name,
+          costPrice: lista.costPrice,
+          salePrice: lista.salePrice,
+          active: lista.active,
+          validFrom: validFrom,
+          validTo: validTo,
+          fechaActual: fechaActual,
+          estaVigente: estaVigente
+        });
+        
+        return estaVigente;
+      })
+      .sort((a, b) => {
+        // Ordenar por fecha de creación/validación más reciente
+        const dateA = a.validFrom ? new Date(a.validFrom).getTime() : 0;
+        const dateB = b.validFrom ? new Date(b.validFrom).getTime() : 0;
+        return dateB - dateA;
+      });
+    
+    if (listasVigentes.length > 0) {
+      const listaSeleccionada = listasVigentes[0]; // Tomar la más reciente
+      
+      // USAR costPrice en lugar de salePrice según el PriceListDTO
+      if (listaSeleccionada.costPrice && Number(listaSeleccionada.costPrice) > 0) {
+        console.log('✅ Precio costPrice encontrado en lista vigente:', {
+          costPrice: listaSeleccionada.costPrice,
+          salePrice: listaSeleccionada.salePrice,
+          lista: listaSeleccionada.name,
+          listaId: listaSeleccionada.id
+        });
+        
+        return {
+          valor: Number(listaSeleccionada.costPrice),
+          origen: `lista "${listaSeleccionada.name}" (costPrice)`
+        };
+      } else if (listaSeleccionada.salePrice && Number(listaSeleccionada.salePrice) > 0) {
+        // Fallback a salePrice si costPrice no está disponible
+        console.log('⚠️ Usando salePrice como fallback (costPrice no disponible):', {
+          salePrice: listaSeleccionada.salePrice,
+          lista: listaSeleccionada.name,
+          listaId: listaSeleccionada.id
+        });
+        
+        return {
+          valor: Number(listaSeleccionada.salePrice),
+          origen: `lista "${listaSeleccionada.name}" (salePrice fallback)`
+        };
+      } else {
+        console.log('⚠️ Lista vigente sin costPrice ni salePrice válidos:', listaSeleccionada);
+      }
+    } else {
+      console.log('❌ No se encontraron listas de precios vigentes');
+    }
+    
+    return null;
   }
 
   onCantidadChanged(index: number): void {
@@ -370,30 +493,119 @@ export class VentaComponent implements OnInit {
     }
   }
 
+  /**
+   * Intenta obtener el precio correcto de un producto para el historial
+   */
+  private async obtenerPrecioParaHistorial(productId: number): Promise<number> {
+    try {
+      // Intentar obtener el precio desde las listas de precios
+      const listas = await this.ventaService.obtenerPrecioActualProducto(productId).toPromise();
+      
+      if (listas && listas.length > 0) {
+        const precio = this.buscarPrecioVigente(listas);
+        if (precio && precio.valor > 0) {
+          console.log(`✅ Precio de lista encontrado para producto ${productId}:`, precio.valor);
+          return precio.valor;
+        }
+      }
+      
+      // Fallback: buscar en productos disponibles
+      const producto = this.productosDisponibles.find(p => p.id === productId);
+      if (producto && producto.precio > 0) {
+        console.log(`🔄 Usando precio base para producto ${productId}:`, producto.precio);
+        return producto.precio;
+      }
+      
+      console.log(`⚠️ No se pudo obtener precio para producto ${productId}, usando fallback`);
+      return 1000; // Fallback genérico
+      
+    } catch (error) {
+      console.error(`❌ Error obteniendo precio para producto ${productId}:`, error);
+      return 1000; // Fallback genérico
+    }
+  }
+
   private cargarVentasRealizadas(): void {
     this.ventaService.obtenerTodas().subscribe({
-      next: (ventas: any[]) => {
+      next: async (ventas: any[]) => {
+        console.log('Ventas recibidas del backend:', ventas);
+        
         // Adaptamos la respuesta del backend a nuestro modelo
-        this.ventasRealizadas = ventas.map((venta: any) => ({
-          id: venta.id,
-          numeroVenta: `V-${venta.id.toString().padStart(6, '0')}`,
-          fecha: venta.saleDate || new Date().toISOString(),
-          clienteRut: venta.patientRut,
-          clienteNombre: venta.patientName,
-          items: (venta.saleItems || []).map((item: any) => ({
-            productoId: item.productId,
-            productName: item.productName,
-            cantidad: item.quantity,
-            precioUnitario: item.unitPrice,
-            subtotal: item.totalPrice
-          })),
-          subtotal: venta.subtotal || 0,
-          impuestos: (venta.totalAmount || 0) - (venta.subtotal || 0),
-          total: venta.totalAmount || 0,
-          metodoPago: 'EFECTIVO', // TODO: obtener método real
-          estado: venta.status || 'COMPLETADA',
-          observaciones: ''
+        this.ventasRealizadas = await Promise.all(ventas.map(async (venta: any) => {
+          console.log('Procesando venta:', venta);
+          
+          // Mapear los items de la venta
+          const items = await Promise.all((venta.saleItems || []).map(async (item: any) => {
+            console.log('Procesando item detallado:', {
+              original: item,
+              productId: item.productId,
+              productName: item.productName,
+              productCode: item.productCode,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              totalPrice: item.totalPrice
+            });
+            
+            // SIEMPRE recalcular el precio desde las listas de precios para el historial
+            console.log(`🔧 Recalculando precio para producto ${item.productId} desde listas de precios...`);
+            
+            // Obtener el precio correcto desde las listas de precios (costPrice)
+            const precioCorrectoListas = await this.obtenerPrecioParaHistorial(item.productId);
+            const precioUnitarioReal = precioCorrectoListas;
+            const subtotalReal = precioCorrectoListas * (item.quantity || 1);
+            
+            console.log(`✅ Precio aplicado desde listas para producto ${item.productId}:`, {
+              precioBackend: item.unitPrice,
+              precioListasPrecios: precioUnitarioReal,
+              cantidad: item.quantity,
+              subtotalCalculado: subtotalReal,
+              subtotalBackend: item.totalPrice
+            });
+            
+            return {
+              productoId: item.productId,
+              productName: item.productName || item.productCode || `Producto ${item.productId}`,
+              cantidad: item.quantity,
+              precioUnitario: precioUnitarioReal,
+              subtotal: subtotalReal
+            };
+          }));
+          
+          // CALCULAR TOTALES CORRECTAMENTE DESDE LOS ITEMS (ignorar backend completamente)
+          const subtotalCalculado = items.reduce((sum: number, item: any) => sum + (item.subtotal || 0), 0);
+          const ivaCalculado = subtotalCalculado * 0.19;
+          const totalCalculado = subtotalCalculado + ivaCalculado;
+          
+          console.log('💰 FORZANDO cálculo correcto de totales (ignorando backend):', {
+            ventaId: venta.id,
+            itemsSubtotales: items.map((i: any) => ({ productId: i.productoId, subtotal: i.subtotal })),
+            subtotalCalculado: subtotalCalculado,
+            ivaCalculado: ivaCalculado,
+            totalCalculado: totalCalculado,
+            valoresBackend: {
+              subtotal: venta.subtotal,
+              taxes: venta.taxes,
+              totalAmount: venta.totalAmount
+            }
+          });
+          
+          return {
+            id: venta.id,
+            numeroVenta: `V-${venta.id.toString().padStart(6, '0')}`,
+            fecha: venta.saleDate || new Date().toISOString(),
+            clienteRut: venta.patientRut,
+            clienteNombre: venta.patientName,
+            items: items,
+            subtotal: subtotalCalculado,
+            impuestos: ivaCalculado,
+            total: totalCalculado,
+            metodoPago: venta.paymentMethod || venta.metodoPago || 'EFECTIVO',
+            estado: venta.status || 'COMPLETED',
+            observaciones: venta.observations || venta.observaciones || ''
+          };
         }));
+        
+        console.log('Ventas procesadas con cálculos corregidos:', this.ventasRealizadas);
       },
       error: (error: any) => {
         console.error('Error cargando ventas:', error);
@@ -443,6 +655,12 @@ export class VentaComponent implements OnInit {
     
     const ventaCreateDTO = {
       patientRut: rutSinPuntos,
+      patientName: this.formularioVenta.get('clienteNombre')?.value || '',
+      paymentMethod: this.formularioVenta.get('metodoPago')?.value || 'EFECTIVO',
+      observations: this.formularioVenta.get('observaciones')?.value || '',
+      subtotal: this.subtotal,
+      taxes: this.impuestos,
+      totalAmount: this.total,
       saleItems: itemsValidos.map((item: any) => {
         const producto = this.productosDisponibles.find(p => p.id === item.productoId);
         
@@ -464,10 +682,25 @@ export class VentaComponent implements OnInit {
           productId: item.productoId,
           batchId: inventarioSeleccionado?.batchId || 1,
           warehouseId: inventarioSeleccionado?.warehouseId || 1,
-          quantity: item.cantidad
+          quantity: item.cantidad,
+          unitPrice: item.precioUnitario,
+          totalPrice: item.subtotal
         };
       })
     };
+
+    console.log('🚀 Enviando venta al backend con detalles completos:', {
+      subtotalFormulario: this.subtotal,
+      impuestosFormulario: this.impuestos,
+      totalFormulario: this.total,
+      itemsDetalle: itemsValidos.map((item: any) => ({
+        productoId: item.productoId,
+        cantidad: item.cantidad,
+        precioUnitario: item.precioUnitario,
+        subtotal: item.subtotal
+      })),
+      ventaCreateDTO: ventaCreateDTO
+    });
 
     this.ventaService.crearVenta(ventaCreateDTO).subscribe({
       next: (venta: any) => {
@@ -556,13 +789,27 @@ export class VentaComponent implements OnInit {
   }
 
   getProductoNombre(productoId: number, item?: any): string {
+    console.log('getProductoNombre llamado con:', { productoId, item });
+    
     // Si el item ya tiene el nombre del producto (desde saleItems), lo usamos
-    if (item && item.productName) {
-      return item.productName;
+    if (item && (item.productName || item.productCode)) {
+      const nombre = item.productName || item.productCode;
+      console.log('Usando nombre del item:', nombre);
+      return nombre;
     }
+    
     // Si no, lo buscamos en la lista de productos disponibles
     const producto = this.productosDisponibles.find(p => p.id === productoId);
-    return producto ? producto.nombre : 'Producto no encontrado';
+    if (producto) {
+      const nombre = producto.nombre || `Producto ${productoId}`;
+      console.log('Encontrado en productos disponibles:', nombre);
+      return nombre;
+    }
+    
+    // Fallback con ID del producto
+    const fallback = `Producto ${productoId}`;
+    console.log('Usando fallback:', fallback);
+    return fallback;
   }
 
   getProductoStock(productoId: number | string): number {

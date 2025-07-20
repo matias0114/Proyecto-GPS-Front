@@ -540,6 +540,36 @@
   color: #1e40af;
 }
 
+/* Totales en las tarjetas de venta */
+.venta-totales {
+  background: #f1f5f9;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin: 0.75rem 0;
+}
+
+.venta-totales p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+}
+
+.venta-totales p:last-child {
+  font-weight: 600;
+  color: #0f172a;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.no-products {
+  color: #64748b;
+  font-style: italic;
+  padding: 0.5rem;
+  background: #f8fafc;
+  border-radius: 4px;
+  text-align: center;
+}
+
 /* Responsividad */
 @media (max-width: 1200px) {
   .item-fields {

@@ -240,7 +240,11 @@
           <div class="venta-info">
             <p><strong>Cliente:</strong> {{ venta.clienteNombre }}</p>
             <p *ngIf="venta.clienteRut"><strong>RUT:</strong> {{ venta.clienteRut }}</p>
-            <p><strong>Total:</strong> {{ formatCurrency(venta.total) }}</p>
+            <div class="venta-totales">
+              <p><strong>Subtotal:</strong> {{ formatCurrency(venta.subtotal) }}</p>
+              <p><strong>IVA (19%):</strong> {{ formatCurrency(venta.impuestos) }}</p>
+              <p><strong>Total:</strong> {{ formatCurrency(venta.total) }}</p>
+            </div>
             <p><strong>Método de Pago:</strong> {{ venta.metodoPago }}</p>
             <span class="venta-estado" [class]="'estado-' + venta.estado.toLowerCase()">
               {{ venta.estado }}
@@ -249,11 +253,13 @@
 
           <div class="venta-items">
             <p><strong>Productos:</strong></p>
-            <ul>
+            <div *ngIf="!venta.items || venta.items.length === 0" class="no-products">
+              <em>Sin información de productos</em>
+            </div>
+            <ul *ngIf="venta.items && venta.items.length > 0">
               <li *ngFor="let item of venta.items">
-                {{ item.productName || getProductoNombre(item.productoId, item) }} - 
-                Cant: {{ item.cantidad }} - 
-                {{ formatCurrency(item.subtotal) }}
+                <strong>{{ item.productName || getProductoNombre(item.productoId, item) }}</strong> - 
+                Cant: {{ item.cantidad }}
               </li>
             </ul>
           </div>
