@@ -12,7 +12,7 @@ export class PacientesComponent implements OnInit {
   formularioPaciente!: FormGroup;
   successMessage = '';
   errorMessage = '';
-  tiposBeneficio = ['ADULTO_MAYOR', 'CRONICO', 'GRATUIDAD_PSICOTROPICOS'];
+  tiposBeneficio = ['ADULTO_MAYOR', 'CRONICO'];
 
   constructor(
     private fb: FormBuilder,
@@ -90,7 +90,7 @@ export class PacientesComponent implements OnInit {
 
   onSubmit(): void {
     if (this.formularioPaciente.invalid) {
-      if (this.formularioPaciente.get('dni')?.errors?.['rutInvalido']) {
+      if (this.formularioPaciente.get('rut')?.errors?.['rutInvalido']) {
         this.errorMessage = 'Ingrese un RUT chileno válido.';
       } else if (this.formularioPaciente.get('nombre')?.errors?.['nombreApellidoInvalido']) {
         this.errorMessage = 'El nombre solo debe contener letras y espacios.';

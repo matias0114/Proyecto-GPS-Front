@@ -7,5 +7,5 @@ export interface Paciente {
   direccion: string;
   telefono: string;
   esBeneficiario?: boolean;
-  tipoBeneficio?: 'ADULTO_MAYOR' | 'CRONICO' | 'GRATUIDAD_PSICOTROPICOS' | null;
+  tipoBeneficio?: 'ADULTO_MAYOR' | 'CRONICO' | null;
 }
