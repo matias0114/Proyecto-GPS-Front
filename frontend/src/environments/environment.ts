@@ -5,6 +5,7 @@ export const environment = {
   endpoints: {
     compras: 'http://localhost:8082/api/compras',
     facturas: 'http://localhost:8082/api/facturas',
+    guiasDespacho: 'http://localhost:8082/api/guias-despacho',
     inventario: 'http://localhost:8081/api/inventario',
     ventas: 'http://localhost:8084/api/ventas',
     precios: 'http://localhost:8086/api/precios',

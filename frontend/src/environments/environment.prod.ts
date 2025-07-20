@@ -4,7 +4,8 @@ export const environment = {
   // URLs específicas para cada microservicio en producción
   endpoints: {
     compras: '/api/compras',
-    facturas: '/api/facturas', 
+    facturas: '/api/facturas',
+    guiasDespacho: '/api/guias-despacho',
     inventario: '/api/inventario',
     ventas: '/api/ventas',
     precios: '/api/precios',
