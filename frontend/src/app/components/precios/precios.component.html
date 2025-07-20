@@ -33,6 +33,7 @@
     <div class="filters-panel" [class.expanded]="showFiltersPanel">
       <div class="filters-content">
         <h4>Filtros de Búsqueda</h4>
+        <p class="filter-instructions">Complete solo los campos que desee usar para la búsqueda. Los campos vacíos serán ignorados.</p>
         
         <div class="filters-row">
           <!-- Filtros de producto -->
@@ -41,7 +42,6 @@
             <input 
               type="text" 
               [(ngModel)]="filters.productCode" 
-              (input)="onFilterChange()"
               placeholder="Buscar por código..."
               class="filter-input"
             />
@@ -52,7 +52,6 @@
             <input 
               type="text" 
               [(ngModel)]="filters.productName" 
-              (input)="onFilterChange()"
               placeholder="Buscar por nombre..."
               class="filter-input"
             />
@@ -60,7 +59,7 @@
 
           <div class="filter-group">
             <label>Tipo de Precio</label>
-            <select [(ngModel)]="filters.priceType" (change)="onFilterChange()" class="filter-select">
+            <select [(ngModel)]="filters.priceType" class="filter-select">
               <option value="">Todos los tipos</option>
               <option *ngFor="let type of priceTypes" [value]="type.value">{{ type.label }}</option>
             </select>
@@ -71,7 +70,7 @@
           <!-- Filtros de bodega -->
           <div class="filter-group">
             <label>Bodega</label>
-            <select [(ngModel)]="filters.warehouse" (change)="onFilterChange()" class="filter-select">
+            <select [(ngModel)]="filters.warehouse" class="filter-select">
               <option value="">Todas las bodegas</option>
               <option value="all">Solo precios generales</option>
               <option value="specific">Solo precios específicos</option>
@@ -81,7 +80,7 @@
 
           <div class="filter-group">
             <label>Moneda</label>
-            <select [(ngModel)]="filters.currency" (change)="onFilterChange()" class="filter-select">
+            <select [(ngModel)]="filters.currency" class="filter-select">
               <option value="">Todas las monedas</option>
               <option value="CLP">Peso Chileno (CLP)</option>
               <option value="USD">Dólar Americano (USD)</option>
@@ -93,8 +92,7 @@
             <label class="checkbox-label">
               <input 
                 type="checkbox" 
-                [(ngModel)]="filters.activeOnly" 
-                (change)="onFilterChange()"
+                [(ngModel)]="filters.activeOnly"
               />
               Solo precios activos
             </label>
@@ -108,7 +106,6 @@
             <input 
               type="number" 
               [(ngModel)]="filters.minPrice" 
-              (input)="onFilterChange()"
               min="0"
               step="0.01"
               placeholder="0.00"
@@ -121,7 +118,6 @@
             <input 
               type="number" 
               [(ngModel)]="filters.maxPrice" 
-              (input)="onFilterChange()"
               min="0"
               step="0.01"
               placeholder="Sin límite"
@@ -134,7 +130,6 @@
             <input 
               type="number" 
               [(ngModel)]="filters.minCostPrice" 
-              (input)="onFilterChange()"
               min="0"
               step="0.01"
               placeholder="0.00"
@@ -147,7 +142,6 @@
             <input 
               type="number" 
               [(ngModel)]="filters.maxCostPrice" 
-              (input)="onFilterChange()"
               min="0"
               step="0.01"
               placeholder="Sin límite"
@@ -163,7 +157,6 @@
             <input 
               type="date" 
               [(ngModel)]="filters.dateFrom" 
-              (change)="onFilterChange()"
               class="filter-input"
             />
           </div>
@@ -173,13 +166,15 @@
             <input 
               type="date" 
               [(ngModel)]="filters.dateTo" 
-              (change)="onFilterChange()"
               class="filter-input"
             />
           </div>
         </div>
 
         <div class="filters-actions">
+          <button type="button" class="btn-search-filters" (click)="searchWithFilters()">
+            🔍 Buscar
+          </button>
           <button type="button" class="btn-clear-filters" (click)="clearFilters()">
             🗑️ Limpiar Filtros
           </button>

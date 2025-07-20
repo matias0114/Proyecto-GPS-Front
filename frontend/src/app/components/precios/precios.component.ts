@@ -48,6 +48,7 @@ export class PreciosComponent implements OnInit {
 
   // Variables para filtros
   filteredPrecios: PriceList[] = [];
+  isSearchMode = false; // Para controlar si estamos en modo búsqueda
   filters = {
     productCode: '',
     productName: '',
@@ -162,8 +163,13 @@ export class PreciosComponent implements OnInit {
     loadMethod.subscribe({
       next: (precios) => {
         this.precios = precios;
-        this.filteredPrecios = [...precios];
-        this.applyFilters();
+        // Si no estamos en modo búsqueda, mostrar todos los precios
+        if (!this.isSearchMode) {
+          this.filteredPrecios = [...precios];
+        } else {
+          // Si estamos en modo búsqueda, aplicar filtros actuales
+          this.applyFilters();
+        }
       },
       error: (error) => {
         console.error('Error al cargar precios:', error);
@@ -488,8 +494,10 @@ export class PreciosComponent implements OnInit {
 
   applyFilters(): void {
     this.filteredPrecios = this.precios.filter(precio => {
+      // Solo aplicar filtros que tienen valores
+      
       // Filtro por código de producto
-      if (this.filters.productCode) {
+      if (this.filters.productCode && this.filters.productCode.trim()) {
         const productCode = this.getProductCodeForPrice(precio);
         if (!productCode.toLowerCase().includes(this.filters.productCode.toLowerCase())) {
           return false;
@@ -497,7 +505,7 @@ export class PreciosComponent implements OnInit {
       }
 
       // Filtro por nombre de producto
-      if (this.filters.productName) {
+      if (this.filters.productName && this.filters.productName.trim()) {
         const productName = this.getProductNameForPrice(precio);
         if (!productName.toLowerCase().includes(this.filters.productName.toLowerCase())) {
           return false;
@@ -505,12 +513,14 @@ export class PreciosComponent implements OnInit {
       }
 
       // Filtro por tipo de precio
-      if (this.filters.priceType && precio.priceType !== this.filters.priceType) {
-        return false;
+      if (this.filters.priceType && this.filters.priceType.trim()) {
+        if (precio.priceType !== this.filters.priceType) {
+          return false;
+        }
       }
 
       // Filtro por bodega
-      if (this.filters.warehouse) {
+      if (this.filters.warehouse && this.filters.warehouse.trim()) {
         if (this.filters.warehouse === 'all') {
           if (precio.warehouseId) return false;
         } else if (this.filters.warehouse === 'specific') {
@@ -521,44 +531,56 @@ export class PreciosComponent implements OnInit {
       }
 
       // Filtro por precio de venta mínimo
-      if (this.filters.minPrice !== null && precio.salePrice < this.filters.minPrice) {
-        return false;
+      if (this.filters.minPrice !== null && this.filters.minPrice !== undefined && this.filters.minPrice > 0) {
+        if (precio.salePrice < this.filters.minPrice) {
+          return false;
+        }
       }
 
       // Filtro por precio de venta máximo
-      if (this.filters.maxPrice !== null && precio.salePrice > this.filters.maxPrice) {
-        return false;
+      if (this.filters.maxPrice !== null && this.filters.maxPrice !== undefined && this.filters.maxPrice > 0) {
+        if (precio.salePrice > this.filters.maxPrice) {
+          return false;
+        }
       }
 
       // Filtro por precio de costo mínimo
-      if (this.filters.minCostPrice !== null && (precio.costPrice || 0) < this.filters.minCostPrice) {
-        return false;
+      if (this.filters.minCostPrice !== null && this.filters.minCostPrice !== undefined && this.filters.minCostPrice > 0) {
+        if ((precio.costPrice || 0) < this.filters.minCostPrice) {
+          return false;
+        }
       }
 
       // Filtro por precio de costo máximo
-      if (this.filters.maxCostPrice !== null && (precio.costPrice || 0) > this.filters.maxCostPrice) {
-        return false;
+      if (this.filters.maxCostPrice !== null && this.filters.maxCostPrice !== undefined && this.filters.maxCostPrice > 0) {
+        if ((precio.costPrice || 0) > this.filters.maxCostPrice) {
+          return false;
+        }
       }
 
       // Filtro por moneda
-      if (this.filters.currency && precio.currency !== this.filters.currency) {
-        return false;
+      if (this.filters.currency && this.filters.currency.trim()) {
+        if (precio.currency !== this.filters.currency) {
+          return false;
+        }
       }
 
       // Filtro por solo activos
-      if (this.filters.activeOnly && !precio.active) {
-        return false;
+      if (this.filters.activeOnly) {
+        if (!precio.active) {
+          return false;
+        }
       }
 
       // Filtro por fecha desde
-      if (this.filters.dateFrom) {
+      if (this.filters.dateFrom && this.filters.dateFrom.trim()) {
         const fechaFiltro = new Date(this.filters.dateFrom);
         const fechaPrecio = new Date(precio.validFrom);
         if (fechaPrecio < fechaFiltro) return false;
       }
 
       // Filtro por fecha hasta
-      if (this.filters.dateTo) {
+      if (this.filters.dateTo && this.filters.dateTo.trim()) {
         const fechaFiltro = new Date(this.filters.dateTo);
         const fechaPrecio = precio.validTo ? new Date(precio.validTo) : new Date();
         if (fechaPrecio > fechaFiltro) return false;
@@ -583,7 +605,9 @@ export class PreciosComponent implements OnInit {
       dateFrom: '',
       dateTo: ''
     };
-    this.applyFilters();
+    this.isSearchMode = false;
+    this.filteredPrecios = [...this.precios]; // Mostrar todos los precios
+    this.showMessage('Filtros limpiados - Mostrando todos los precios', 'success');
   }
 
   // Métodos para controlar paneles colapsibles
@@ -596,7 +620,17 @@ export class PreciosComponent implements OnInit {
   }
 
   onFilterChange(): void {
+    // Solo aplicar filtros automáticamente si no estamos en modo búsqueda manual
+    if (!this.isSearchMode) {
+      this.applyFilters();
+    }
+  }
+
+  // Nuevo método para búsqueda con filtros
+  searchWithFilters(): void {
+    this.isSearchMode = true;
     this.applyFilters();
+    this.showMessage(`Se encontraron ${this.filteredPrecios.length} resultados`, 'success');
   }
 
   getFilteredPreciosCount(): number {
