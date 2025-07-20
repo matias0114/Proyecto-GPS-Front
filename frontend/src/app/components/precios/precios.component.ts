@@ -333,6 +333,9 @@ export class PreciosComponent implements OnInit {
   editPrice(precio: PriceList): void {
     this.editingPriceId = precio.id || null;
     
+    // Desplegar automáticamente el formulario de edición
+    this.showFormPanel = true;
+    
     // Buscar el producto para completar la información
     if (precio.productId) {
       this.productService.getProductById(precio.productId).subscribe({
