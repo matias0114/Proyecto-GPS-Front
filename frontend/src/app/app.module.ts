@@ -15,6 +15,8 @@ import { ComprasComponent } from './components/compras/compras.component';
 import { GuiasDespachoComponent } from './components/guias-despacho/guias-despacho.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ReportesComponent } from './components/reportes/reportes.component';
+import { VentasComponent } from './components/ventas/ventas.component';
+import { VentaComponent } from './components/venta/venta.component';
 
 @NgModule({
   declarations: [
@@ -28,7 +30,9 @@ import { ReportesComponent } from './components/reportes/reportes.component';
     ComprasComponent,
     GuiasDespachoComponent,
     DashboardComponent,
-    ReportesComponent
+    ReportesComponent,
+    VentasComponent,
+    VentaComponent
   ],
   imports: [
     BrowserModule,

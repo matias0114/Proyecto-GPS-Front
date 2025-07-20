@@ -1,0 +1,267 @@
+<div class="venta-container">
+  <h2>Gestión de Venta</h2>
+
+  <!-- Mensajes de estado -->
+  <div *ngIf="message" class="alert" [ngClass]="{'alert-success': messageType === 'success', 'alert-error': messageType === 'error'}">
+    {{ message }}
+  </div>
+
+  <!-- Panel de formulario para nueva venta -->
+  <div class="form-panel">
+    <div class="form-header">
+      <h3>Nueva Venta</h3>
+      <button type="button" class="btn-toggle" (click)="toggleFormPanel()">
+        {{ showFormPanel ? '▼ Ocultar' : '▶ Mostrar' }} Formulario
+      </button>
+    </div>
+
+    <div class="form-content" [class.expanded]="showFormPanel">
+      <form [formGroup]="formularioVenta" (ngSubmit)="onSubmit()" class="venta-form">
+        
+        <!-- Información del cliente -->
+        <div class="form-section">
+          <h4>Información del Cliente</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="clienteRut">RUT Cliente *</label>
+              <input 
+                type="text" 
+                id="clienteRut" 
+                formControlName="clienteRut" 
+                placeholder="12.345.678-9"
+                [class.is-invalid]="isFieldInvalid('clienteRut')"
+                (blur)="onRutChange()"
+                required
+              >
+              <div *ngIf="isFieldInvalid('clienteRut')" class="invalid-feedback">
+                Ingrese un RUT válido
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="clienteNombre">Nombre Cliente</label>
+              <input 
+                type="text" 
+                id="clienteNombre" 
+                formControlName="clienteNombre" 
+                placeholder="Se obtendrá automáticamente del RUT"
+                [class.is-invalid]="isFieldInvalid('clienteNombre')"
+                readonly
+              >
+              <div *ngIf="isFieldInvalid('clienteNombre')" class="invalid-feedback">
+                No se pudo obtener el nombre del paciente
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Items de la venta -->
+        <div class="form-section">
+          <div class="items-header">
+            <h4>Productos a Vender</h4>
+            <button type="button" class="btn-add-item" (click)="agregarItem()">
+              + Agregar Producto
+            </button>
+          </div>
+
+          <div formArrayName="items" class="items-container">
+            <div *ngFor="let item of itemsArray.controls; let i = index" 
+                 [formGroupName]="i" 
+                 class="item-row">
+              
+              <div class="item-fields">
+                <div class="form-group producto-select">
+                  <label>Producto *</label>
+                  <select 
+                    formControlName="productoId" 
+                    (change)="onProductoSeleccionado(i, $any($event.target).value)"
+                    [class.is-invalid]="isItemFieldInvalid(i, 'productoId')"
+                  >
+                    <option value="">Seleccione un producto</option>
+                    <option *ngFor="let producto of productosDisponibles" [value]="producto.id">
+                      {{ producto.nombre }} - {{ formatCurrency(producto.precio) }} (Stock: {{ producto.stock }})
+                    </option>
+                  </select>
+                  <div *ngIf="isItemFieldInvalid(i, 'productoId')" class="invalid-feedback">
+                    Seleccione un producto
+                  </div>
+                </div>
+
+                <div class="form-group cantidad-input">
+                  <label>Cantidad *</label>
+                  <input 
+                    type="number" 
+                    formControlName="cantidad" 
+                    min="1" 
+                    (input)="onCantidadChanged(i)"
+                    [class.is-invalid]="isItemFieldInvalid(i, 'cantidad')"
+                  >
+                  <div *ngIf="isItemFieldInvalid(i, 'cantidad')" class="invalid-feedback">
+                    Ingrese una cantidad válida
+                  </div>
+                </div>
+
+                <div class="form-group precio-input">
+                  <label>Precio Unitario</label>
+                  <input 
+                    type="number" 
+                    formControlName="precioUnitario" 
+                    readonly
+                    class="readonly-field"
+                  >
+                </div>
+
+                <div class="form-group subtotal-display">
+                  <label>Subtotal</label>
+                  <div class="subtotal-value">
+                    {{ formatCurrency(item.get('subtotal')?.value || 0) }}
+                  </div>
+                </div>
+
+                <div class="item-actions">
+                  <button 
+                    type="button" 
+                    class="btn-remove-item" 
+                    (click)="removerItem(i)"
+                    [disabled]="itemsArray.length <= 1"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              <!-- Información adicional del producto -->
+              <div *ngIf="item.get('productoId')?.value" class="product-info">
+                <div class="stock-warning" 
+                     *ngIf="shouldShowStockWarning(i)">
+                  ⚠️ Stock insuficiente. Disponible: {{ getProductoStock(item.get('productoId')?.value) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Totales de la venta -->
+        <div class="totales-section">
+          <div class="totales-grid">
+            <div class="total-row">
+              <span class="label">Subtotal:</span>
+              <span class="value">{{ formatCurrency(subtotal) }}</span>
+            </div>
+            <div class="total-row">
+              <span class="label">IVA (19%):</span>
+              <span class="value">{{ formatCurrency(impuestos) }}</span>
+            </div>
+            <div class="total-row total-final">
+              <span class="label">TOTAL:</span>
+              <span class="value">{{ formatCurrency(total) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Información de pago -->
+        <div class="form-section">
+          <h4>Información de Pago</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="metodoPago">Método de Pago *</label>
+              <select 
+                id="metodoPago" 
+                formControlName="metodoPago"
+                [class.is-invalid]="isFieldInvalid('metodoPago')"
+              >
+                <option *ngFor="let metodo of metodosPago" [value]="metodo.value">
+                  {{ metodo.label }}
+                </option>
+              </select>
+              <div *ngIf="isFieldInvalid('metodoPago')" class="invalid-feedback">
+                Seleccione un método de pago
+              </div>
+            </div>
+
+            <div class="form-group observaciones-group">
+              <label for="observaciones">Observaciones</label>
+              <textarea 
+                id="observaciones" 
+                formControlName="observaciones" 
+                placeholder="Observaciones adicionales (opcional)"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones del formulario -->
+        <div class="form-actions">
+          <button 
+            type="submit" 
+            class="btn-procesar"
+            [disabled]="loading || formularioVenta.invalid || total <= 0"
+          >
+            <span *ngIf="loading">Procesando...</span>
+            <span *ngIf="!loading">💰 Procesar Venta</span>
+          </button>
+          
+          <button 
+            type="button" 
+            class="btn-reset" 
+            (click)="resetForm()"
+            [disabled]="loading"
+          >
+            🔄 Limpiar Formulario
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Panel de historial de ventas -->
+  <div class="ventas-panel">
+    <div class="panel-header">
+      <h3>Historial de Ventas</h3>
+      <button type="button" class="btn-toggle" (click)="toggleVentasPanel()">
+        {{ showVentasPanel ? '▼ Ocultar' : '▶ Mostrar' }} Historial
+      </button>
+    </div>
+
+    <div class="panel-content" [class.expanded]="showVentasPanel">
+      <div *ngIf="ventasRealizadas.length === 0" class="empty-state">
+        <p>No se han registrado ventas aún.</p>
+      </div>
+
+      <div *ngIf="ventasRealizadas.length > 0" class="ventas-grid">
+        <div *ngFor="let venta of ventasRealizadas" class="venta-card">
+          <div class="venta-header">
+            <h5>{{ venta.numeroVenta }}</h5>
+            <span class="venta-fecha">{{ venta.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          
+          <div class="venta-info">
+            <p><strong>Cliente:</strong> {{ venta.clienteNombre }}</p>
+            <p *ngIf="venta.clienteRut"><strong>RUT:</strong> {{ venta.clienteRut }}</p>
+            <p><strong>Total:</strong> {{ formatCurrency(venta.total) }}</p>
+            <p><strong>Método de Pago:</strong> {{ venta.metodoPago }}</p>
+            <span class="venta-estado" [class]="'estado-' + venta.estado.toLowerCase()">
+              {{ venta.estado }}
+            </span>
+          </div>
+
+          <div class="venta-items">
+            <p><strong>Productos:</strong></p>
+            <ul>
+              <li *ngFor="let item of venta.items">
+                {{ item.productName || getProductoNombre(item.productoId, item) }} - 
+                Cant: {{ item.cantidad }} - 
+                {{ formatCurrency(item.subtotal) }}
+              </li>
+            </ul>
+          </div>
+
+          <div *ngIf="venta.observaciones" class="venta-observaciones">
+            <p><strong>Observaciones:</strong> {{ venta.observaciones }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

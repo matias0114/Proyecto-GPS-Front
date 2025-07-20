@@ -21,4 +21,14 @@ export class PacientesService {
     };
     return this.http.post<Paciente>(this.apiUrl, pacienteData, { headers });
   }
+
+  buscarPorRut(rut: string): Observable<Paciente> {
+    // Asegurar que el RUT no tenga puntos para la búsqueda
+    const rutSinPuntos = rut.replace(/\./g, '');
+    return this.http.get<Paciente>(`${this.apiUrl}/${encodeURIComponent(rutSinPuntos)}`);
+  }
+
+  obtenerTodos(): Observable<Paciente[]> {
+    return this.http.get<Paciente[]>(this.apiUrl);
+  }
 }

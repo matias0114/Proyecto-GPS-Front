@@ -12,6 +12,8 @@ import { PreciosComponent } from './components/precios/precios.component';
 import { GuiasDespachoComponent } from './components/guias-despacho/guias-despacho.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ReportesComponent } from './components/reportes/reportes.component';
+import { VentasComponent } from './components/ventas/ventas.component';
+import { VentaComponent } from './components/venta/venta.component';
 
 // Definir rutas
 const routes: Routes = [
@@ -24,6 +26,8 @@ const routes: Routes = [
   { path: 'inventario', component: InventarioComponent },
   { path: 'facturas', component: FacturasComponent },
   { path: 'compras', component: ComprasComponent },
+  { path: 'ventas', component: VentasComponent },
+  { path: 'venta', component: VentaComponent },
   { path: 'precios', component: PreciosComponent },
   { path: 'guias-despacho', component: GuiasDespachoComponent }
 ];
