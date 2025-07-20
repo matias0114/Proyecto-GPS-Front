@@ -138,6 +138,24 @@ export class VentaService {
       .pipe(catchError(this.handleError));
   }
 
+  /**
+   * Obtener precio actual de un producto desde las listas de precios
+   */
+  obtenerPrecioActualProducto(productoId: number): Observable<any> {
+    const priceListUrl = 'http://localhost:8081/api/pricelist';
+    return this.http.get<any[]>(`${priceListUrl}/product/${productoId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Obtener precios actuales vigentes
+   */
+  obtenerPreciosActuales(): Observable<any[]> {
+    const priceListUrl = 'http://localhost:8081/api/pricelist';
+    return this.http.get<any[]>(`${priceListUrl}/current`)
+      .pipe(catchError(this.handleError));
+  }
+
   // ========== MANEJO DE ERRORES ==========
 
   private handleError = (error: HttpErrorResponse) => {

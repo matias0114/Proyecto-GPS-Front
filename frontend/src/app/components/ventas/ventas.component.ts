@@ -72,6 +72,14 @@ export class VentasComponent implements OnInit {
     this.initializeForm();
     this.loadInitialData();
     this.cargarVentas();
+    
+    // Debug: verificar estado inicial
+    setTimeout(() => {
+      console.log('🔍 Estado inicial del componente:');
+      console.log('- Productos disponibles:', this.productosDisponibles);
+      console.log('- Bodegas disponibles:', this.bodegasDisponibles);
+      console.log('- Loading:', this.loading);
+    }, 3000);
   }
 
   // ========== INICIALIZACIÓN ==========
@@ -94,7 +102,9 @@ export class VentasComponent implements OnInit {
   }
 
   private loadInitialData(): void {
-    this.cargarProductosDisponibles();
+    // Intentar cargar datos desde inventarios primero
+    console.log('🚀 Iniciando carga de datos...');
+    this.obtenerProductosDesdeInventarios();
     this.cargarBodegasDisponibles();
   }
 
@@ -120,7 +130,8 @@ export class VentasComponent implements OnInit {
       productId: ['', Validators.required],
       warehouseId: ['', Validators.required],
       batchId: ['', Validators.required],
-      quantity: [1, [Validators.required, Validators.min(1)]]
+      quantity: [1, [Validators.required, Validators.min(1)]],
+      unitPrice: [0] // Agregamos el precio unitario al FormGroup
     });
   }
 
@@ -145,24 +156,69 @@ export class VentasComponent implements OnInit {
   // ========== CARGA DE DATOS ==========
 
   private cargarProductosDisponibles(): void {
+    console.log('🔍 Cargando productos disponibles...');
     this.ventaService.obtenerProductosDisponibles().subscribe({
       next: (productos) => {
+        console.log('✅ Productos recibidos:', productos);
         this.productosDisponibles = productos;
+        console.log('📦 Productos disponibles actualizados:', this.productosDisponibles);
       },
       error: (error) => {
-        console.error('Error cargando productos:', error);
+        console.error('❌ Error cargando productos:', error);
+        // Fallback: intentar obtener productos desde inventarios
+        console.log('🔄 Intentando obtener productos desde inventarios...');
+        this.obtenerProductosDesdeInventarios();
+      }
+    });
+  }
+
+  private obtenerProductosDesdeInventarios(): void {
+    this.ventaService.obtenerInventariosDisponibles().subscribe({
+      next: (inventarios) => {
+        console.log('📦 Inventarios recibidos:', inventarios);
+        
+        // Extraer productos únicos desde los inventarios
+        const productosMap = new Map<number, ProductoDisponible>();
+        
+        inventarios.forEach(inventario => {
+          if (inventario.currentStock > 0 && inventario.batch?.product) {
+            const product = inventario.batch.product;
+            if (!productosMap.has(product.id)) {
+              productosMap.set(product.id, {
+                id: product.id,
+                code: product.code || '',
+                name: product.name || 'Sin nombre',
+                description: product.description,
+                category: product.category
+              });
+            }
+          }
+        });
+        
+        this.productosDisponibles = Array.from(productosMap.values());
+        console.log('✅ Productos extraídos desde inventarios:', this.productosDisponibles);
+        
+        if (this.productosDisponibles.length === 0) {
+          this.showMessage('No se encontraron productos con stock disponible', 'error');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error cargando inventarios:', error);
         this.showMessage('Error cargando productos disponibles', 'error');
       }
     });
   }
 
   private cargarBodegasDisponibles(): void {
+    console.log('🏬 Cargando bodegas disponibles...');
     this.ventaService.obtenerBodegasDisponibles().subscribe({
       next: (bodegas) => {
+        console.log('✅ Bodegas recibidas:', bodegas);
         this.bodegasDisponibles = bodegas;
+        console.log('🏪 Bodegas disponibles actualizadas:', this.bodegasDisponibles);
       },
       error: (error) => {
-        console.error('Error cargando bodegas:', error);
+        console.error('❌ Error cargando bodegas:', error);
         this.showMessage('Error cargando bodegas disponibles', 'error');
       }
     });
@@ -235,6 +291,8 @@ export class VentasComponent implements OnInit {
     const warehouseId = event.target.value;
     const productId = this.saleItemsArray.at(itemIndex).get('productId')?.value;
     
+    console.log(`🏬 Bodega seleccionada - Item: ${itemIndex}, Bodega ID: ${warehouseId}, Producto ID: ${productId}`);
+    
     if (!warehouseId || !productId) return;
 
     // Limpiar lote seleccionado
@@ -243,13 +301,17 @@ export class VentasComponent implements OnInit {
     // Cargar inventarios para esta combinación producto-bodega
     this.ventaService.obtenerInventariosPorBodega(Number(warehouseId)).subscribe({
       next: (inventarios) => {
+        console.log(`📦 Inventarios recibidos para bodega ${warehouseId}:`, inventarios);
+        
         // Filtrar por producto
         this.inventariosDisponibles[itemIndex] = inventarios.filter(
-          inv => inv.productId === Number(productId) && inv.currentStock > 0
+          inv => inv.batch.product.id === Number(productId) && inv.currentStock > 0
         );
+        
+        console.log(`✅ Inventarios filtrados para producto ${productId}:`, this.inventariosDisponibles[itemIndex]);
       },
       error: (error) => {
-        console.error('Error cargando inventarios:', error);
+        console.error('❌ Error cargando inventarios:', error);
         this.showMessage('Error cargando inventarios disponibles', 'error');
       }
     });
@@ -265,7 +327,16 @@ export class VentasComponent implements OnInit {
     
     if (inventario) {
       this.inventariosSeleccionados[itemIndex] = inventario;
-      this.preciosEstimados[itemIndex] = 1000; // Precio estimado, debería venir de un servicio
+      // Obtener el precio del producto del inventario
+      const precio = inventario.batch.product.price || 1000; // Fallback a 1000 si no hay precio
+      this.preciosEstimados[itemIndex] = precio;
+      
+      // Actualizar el precio unitario en el formulario
+      const itemControl = this.saleItemsArray.at(itemIndex);
+      itemControl.patchValue({
+        unitPrice: precio
+      });
+      
       this.validarStock(itemIndex);
     }
   }

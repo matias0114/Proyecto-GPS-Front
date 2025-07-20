@@ -40,19 +40,34 @@ export interface VentaItemCreateDTO {
   quantity: number;
 }
 
-// Interfaces para la respuesta del inventario
+// Interfaces para la respuesta del inventario (estructura anidada del backend)
 export interface InventarioResponse {
   id: number;
-  productId: number;
-  productCode: string;
-  productName: string;
-  batchId: number;
-  batchNumber: string;
   warehouseId: number;
-  warehouseName: string;
-  currentStock: number;
+  batchId: number;
   quantity: number;
+  currentStock: number;
+  inventoryType: string;
   lastUpdate: Date;
+  warehouse: {
+    id: number;
+    name: string;
+    location?: string;
+  };
+  batch: {
+    id: number;
+    batchNumber: string;
+    expirationDate: Date;
+    manufacturingDate?: Date;
+    product: {
+      id: number;
+      code: string;
+      name: string;
+      description?: string;
+      price?: number;
+      category?: string;
+    };
+  };
 }
 
 export interface ProductoDisponible {

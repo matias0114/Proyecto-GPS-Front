@@ -104,10 +104,11 @@
                 <div class="form-group precio-input">
                   <label>Precio Unitario</label>
                   <input 
-                    type="number" 
+                    type="text" 
                     formControlName="precioUnitario" 
                     readonly
                     class="readonly-field"
+                    [value]="formatCurrency(item.get('precioUnitario')?.value || 0)"
                   >
                 </div>
 

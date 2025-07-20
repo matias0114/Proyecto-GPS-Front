@@ -41,6 +41,7 @@ export class PreciosComponent implements OnInit {
   messageType: 'success' | 'error' | '' = '';
   showCurrentPricesOnly = false;
   editingPriceId: number | null = null;
+  currentProductPriceInfo: string = ''; // Información del precio actual del producto
 
   // Variables para controles de interfaz
   showFiltersPanel = false;
@@ -187,17 +188,114 @@ export class PreciosComponent implements OnInit {
           productId: producto.id,
           name: `Precio ${producto.name} - ${new Date().toLocaleDateString()}`
         });
+        
+        // Obtener el precio actual del producto desde la lista de precios
+        this.getCurrentPriceForProduct(producto.id!);
       },
       error: (error) => {
         console.error('Error al buscar producto:', error);
         this.selectedProducto = null;
+        this.currentProductPriceInfo = ''; // Limpiar información del precio
         this.formularioPrecio.patchValue({
           nombreProducto: '',
           productId: '',
-          name: ''
+          name: '',
+          salePrice: 0,
+          costPrice: 0
         });
       }
     });
+  }
+
+  private getCurrentPriceForProduct(productId: number): void {
+    // Buscar primero en los precios actuales cargados
+    const currentPrice = this.precios.find(precio => 
+      precio.productId === productId && 
+      precio.active && 
+      this.isPriceCurrentlyValid(precio)
+    );
+
+    if (currentPrice) {
+      // Si encontramos un precio actual en la lista cargada, usarlo
+      this.formularioPrecio.patchValue({
+        salePrice: currentPrice.salePrice,
+        costPrice: currentPrice.costPrice || 0
+      });
+      
+      const validToText = currentPrice.validTo ? 
+        new Date(currentPrice.validTo).toLocaleDateString() : 
+        'Sin fecha de vencimiento';
+      
+      this.currentProductPriceInfo = `Precio vigente desde ${new Date(currentPrice.validFrom!).toLocaleDateString()} hasta ${validToText}`;
+      this.showMessage(`Precio actual cargado: ${this.formatCurrency(currentPrice.salePrice)}`, 'success');
+    } else {
+      // Si no hay precios en la lista cargada, consultar al servicio
+      this.priceListService.getPricesByProductId(productId).subscribe({
+        next: (precios) => {
+          // Buscar el precio más reciente y activo
+          const activePrices = precios.filter(precio => 
+            precio.active && this.isPriceCurrentlyValid(precio)
+          );
+          
+          if (activePrices.length > 0) {
+            // Ordenar por fecha de inicio descendente para obtener el más reciente
+            activePrices.sort((a, b) => {
+              const dateA = new Date(a.validFrom!).getTime();
+              const dateB = new Date(b.validFrom!).getTime();
+              return dateB - dateA;
+            });
+            
+            const mostRecentPrice = activePrices[0];
+            this.formularioPrecio.patchValue({
+              salePrice: mostRecentPrice.salePrice,
+              costPrice: mostRecentPrice.costPrice || 0
+            });
+            
+            const validToText = mostRecentPrice.validTo ? 
+              new Date(mostRecentPrice.validTo).toLocaleDateString() : 
+              'Sin fecha de vencimiento';
+            
+            this.currentProductPriceInfo = `Precio vigente desde ${new Date(mostRecentPrice.validFrom!).toLocaleDateString()} hasta ${validToText}`;
+            this.showMessage(`Precio actual encontrado: ${this.formatCurrency(mostRecentPrice.salePrice)}`, 'success');
+          } else {
+            // Si no hay precios activos, verificar si hay precios históricos
+            if (precios.length > 0) {
+              const lastPrice = precios
+                .sort((a, b) => new Date(b.validFrom!).getTime() - new Date(a.validFrom!).getTime())[0];
+              
+              this.currentProductPriceInfo = `Último precio registrado: ${this.formatCurrency(lastPrice.salePrice)} (Expirado)`;
+              this.showMessage('Precio anterior encontrado. Ingrese nuevo precio actual.', 'error');
+            } else {
+              this.currentProductPriceInfo = 'Sin historial de precios';
+              this.showMessage('No se encontró precio actual. Ingrese manualmente.', 'error');
+            }
+            
+            // Dejar campos en 0 para entrada manual
+            this.formularioPrecio.patchValue({
+              salePrice: 0,
+              costPrice: 0
+            });
+          }
+        },
+        error: (error) => {
+          console.error('Error al obtener precios del producto:', error);
+          this.currentProductPriceInfo = '';
+          this.formularioPrecio.patchValue({
+            salePrice: 0,
+            costPrice: 0
+          });
+          this.showMessage('Error al obtener precio actual. Ingrese manualmente.', 'error');
+        }
+      });
+    }
+  }
+
+  private isPriceCurrentlyValid(precio: PriceList): boolean {
+    const now = new Date();
+    const validFrom = new Date(precio.validFrom!);
+    const validTo = precio.validTo ? new Date(precio.validTo) : null;
+    
+    return validFrom <= now && (validTo === null || validTo >= now);
   }
 
   private calculateMargin(): void {
@@ -428,6 +526,7 @@ export class PreciosComponent implements OnInit {
     this.selectedProducto = null;
     this.selectedBodega = null;
     this.editingPriceId = null;
+    this.currentProductPriceInfo = ''; // Limpiar información del precio
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {

@@ -91,7 +91,7 @@
                   <select formControlName="batchId" [class.is-invalid]="isItemFieldInvalid(i, 'batchId')" (change)="onLoteSeleccionado(i, $event)">
                     <option value="">Seleccionar lote</option>
                     <option *ngFor="let inventario of inventariosDisponibles[i] || []" [value]="inventario.batchId">
-                      {{ inventario.batchNumber }} (Stock: {{ inventario.currentStock }})
+                      {{ inventario.batch.batchNumber }} (Stock: {{ inventario.currentStock }})
                     </option>
                   </select>
                 </div>
@@ -111,10 +111,21 @@
                   </div>
                 </div>
 
+                <!-- Precio Unitario -->
+                <div class="form-group">
+                  <label>Precio Unitario</label>
+                  <input 
+                    type="number" 
+                    formControlName="unitPrice" 
+                    readonly
+                    class="readonly-field"
+                  />
+                </div>
+
                 <!-- Información de stock -->
                 <div *ngIf="inventariosSeleccionados[i]" class="stock-info">
                   <p><strong>Stock disponible:</strong> {{ inventariosSeleccionados[i]?.currentStock }}</p>
-                  <p><strong>Precio unitario:</strong> ${{ preciosEstimados[i] || 'Calculando...' }}</p>
+                  <p><strong>Precio unitario:</strong> ${{ (saleItemsArray.at(i).get('unitPrice')?.value || preciosEstimados[i] || 0) | number:'1.0-0' }}</p>
                 </div>
               </div>
             </div>

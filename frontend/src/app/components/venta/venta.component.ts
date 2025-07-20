@@ -10,6 +10,13 @@ export interface ProductoVenta {
   precio: number;
   stock: number;
   categoria: string;
+  // Información adicional para la venta
+  inventarios?: {
+    inventoryId: number;
+    batchId: number;
+    warehouseId: number;
+    stockDisponible: number;
+  }[];
 }
 
 export interface ItemVenta {
@@ -179,10 +186,61 @@ export class VentaComponent implements OnInit {
     const producto = this.productosDisponibles.find(p => p.id === id);
     if (producto) {
       const itemControl = this.itemsArray.at(index);
-      itemControl.patchValue({
-        precioUnitario: producto.precio
+      
+      // Primero intentamos obtener el precio desde la lista de precios
+      this.ventaService.obtenerPrecioActualProducto(id).subscribe({
+        next: (listas: any[]) => {
+          console.log('Listas de precios obtenidas para producto', id, ':', listas);
+          
+          let precioUnitario = producto.precio; // Precio por defecto
+          
+          // Buscar el precio actual vigente
+          const fechaActual = new Date();
+          const listaVigente = listas.find(lista => {
+            const validFrom = lista.validFrom ? new Date(lista.validFrom) : null;
+            const validTo = lista.validTo ? new Date(lista.validTo) : null;
+            
+            const vigente = lista.active === true &&
+                           (validFrom === null || fechaActual >= validFrom) &&
+                           (validTo === null || fechaActual <= validTo);
+                           
+            console.log('Verificando lista:', {
+              id: lista.id,
+              name: lista.name,
+              salePrice: lista.salePrice,
+              active: lista.active,
+              validFrom: validFrom,
+              validTo: validTo,
+              vigente: vigente
+            });
+            
+            return vigente;
+          });
+          
+          if (listaVigente && listaVigente.salePrice) {
+            precioUnitario = listaVigente.salePrice;
+            console.log('Precio obtenido desde lista de precios:', precioUnitario);
+            this.showMessage(`Precio actualizado desde lista "${listaVigente.name}": ${this.formatCurrency(precioUnitario)}`, 'success');
+          } else {
+            console.log('No se encontró lista de precios vigente, usando precio base:', precioUnitario);
+            this.showMessage('Usando precio base del producto (no hay lista de precios vigente)', 'error');
+          }
+          
+          itemControl.patchValue({
+            precioUnitario: precioUnitario
+          });
+          this.calcularSubtotalItem(index);
+        },
+        error: (error: any) => {
+          console.error('Error obteniendo precio desde lista de precios:', error);
+          // Usar precio por defecto del producto
+          itemControl.patchValue({
+            precioUnitario: producto.precio
+          });
+          this.calcularSubtotalItem(index);
+          this.showMessage('Error consultando lista de precios, usando precio base', 'error');
+        }
       });
-      this.calcularSubtotalItem(index);
     }
   }
 
@@ -224,51 +282,61 @@ export class VentaComponent implements OnInit {
       console.log('Inventarios recibidos:', inventarios);
       
       if (inventarios && inventarios.length > 0) {
-        // Procesamos inventarios
+        // Procesamos inventarios con estructura anidada
         const productosMap = new Map<number, ProductoVenta>();
         
         inventarios.forEach((inventario: any) => {
-          const productoId = inventario.productId;
+          // Acceder a la información del producto desde la estructura anidada
+          const producto = inventario.batch?.product;
+          if (!producto) {
+            console.warn('Inventario sin información de producto:', inventario);
+            return;
+          }
+          
+          const productoId = producto.id;
           const stockActual = Number(inventario.currentStock) || 0;
           
           console.log(`Procesando inventario para producto ${productoId}:`, {
-            productId: inventario.productId,
-            productName: inventario.productName,
-            currentStock: inventario.currentStock,
-            stockActual: stockActual
+            productoId: productoId,
+            codigo: producto.code,
+            nombre: producto.name,
+            precio: producto.price,
+            stockActual: stockActual,
+            bodega: inventario.warehouse?.name,
+            lote: inventario.batch?.batchNumber
           });
           
           if (productosMap.has(productoId)) {
-            const producto = productosMap.get(productoId)!;
-            producto.stock += stockActual;
+            // Si el producto ya existe, sumar el stock y agregar inventario
+            const productoExistente = productosMap.get(productoId)!;
+            productoExistente.stock += stockActual;
+            productoExistente.inventarios!.push({
+              inventoryId: inventario.id,
+              batchId: inventario.batchId,
+              warehouseId: inventario.warehouseId,
+              stockDisponible: stockActual
+            });
           } else {
+            // Crear nuevo producto
             productosMap.set(productoId, {
               id: productoId,
-              codigo: inventario.productCode || '',
-              nombre: inventario.productName || 'Producto sin nombre',
-              precio: 0,
+              codigo: producto.code || '',
+              nombre: producto.name || 'Producto sin nombre',
+              precio: Number(producto.price) || 0,
               stock: stockActual,
-              categoria: 'General'
+              categoria: producto.category || 'General',
+              inventarios: [{
+                inventoryId: inventario.id,
+                batchId: inventario.batchId,
+                warehouseId: inventario.warehouseId,
+                stockDisponible: stockActual
+              }]
             });
           }
         });
 
         this.productosDisponibles = Array.from(productosMap.values());
-        console.log('Productos disponibles después de inventarios:', this.productosDisponibles);
-        
-        // Cargar precios
-        try {
-          const productos = await this.ventaService.obtenerProductosDisponibles().toPromise();
-          productos?.forEach((producto: any) => {
-            const productoEnStock = this.productosDisponibles.find(p => p.id === producto.id);
-            if (productoEnStock) {
-              productoEnStock.precio = producto.basePrice || 0;
-            }
-          });
-          console.log('Productos disponibles después de precios:', this.productosDisponibles);
-        } catch (error) {
-          console.warn('Error cargando precios:', error);
-        }
+        console.log('Productos disponibles procesados:', this.productosDisponibles);
         
       } else {
         throw new Error('No se recibieron inventarios');
@@ -286,7 +354,8 @@ export class VentaComponent implements OnInit {
           nombre: producto.name || producto.productName || 'Producto sin nombre',
           precio: producto.basePrice || 0,
           stock: 0, // Sin información de stock
-          categoria: producto.category || 'General'
+          categoria: producto.category || 'General',
+          inventarios: [] // Sin inventarios
         })) || [];
         
         this.showMessage('Productos cargados sin información de stock real', 'error');
@@ -374,12 +443,30 @@ export class VentaComponent implements OnInit {
     
     const ventaCreateDTO = {
       patientRut: rutSinPuntos,
-      saleItems: itemsValidos.map((item: any) => ({
-        productId: item.productoId,
-        batchId: 1, // TODO: obtener batch ID real desde el inventario
-        warehouseId: 1, // TODO: obtener warehouse ID real desde el inventario
-        quantity: item.cantidad
-      }))
+      saleItems: itemsValidos.map((item: any) => {
+        const producto = this.productosDisponibles.find(p => p.id === item.productoId);
+        
+        // Obtener el inventario con más stock disponible para este producto
+        let inventarioSeleccionado = null;
+        if (producto && producto.inventarios && producto.inventarios.length > 0) {
+          inventarioSeleccionado = producto.inventarios
+            .filter(inv => inv.stockDisponible >= item.cantidad)
+            .sort((a, b) => b.stockDisponible - a.stockDisponible)[0];
+          
+          // Si no hay inventario con stock suficiente, tomar el que más stock tenga
+          if (!inventarioSeleccionado) {
+            inventarioSeleccionado = producto.inventarios
+              .sort((a, b) => b.stockDisponible - a.stockDisponible)[0];
+          }
+        }
+        
+        return {
+          productId: item.productoId,
+          batchId: inventarioSeleccionado?.batchId || 1,
+          warehouseId: inventarioSeleccionado?.warehouseId || 1,
+          quantity: item.cantidad
+        };
+      })
     };
 
     this.ventaService.crearVenta(ventaCreateDTO).subscribe({
