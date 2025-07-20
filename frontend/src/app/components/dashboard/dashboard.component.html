@@ -137,16 +137,13 @@
           <h4>Evolución de Facturas - Últimos 12 Meses</h4>
         </div>
         <div class="chart-body">
-          <!-- Aquí iría el componente de Chart.js -->
-          <canvas 
-            id="facturasChart"
-            width="400" 
-            height="200"
-            style="background: #f8f9fa; border-radius: 8px; padding: 20px;">
-          </canvas>
-          <p class="text-muted text-center mt-2">
-            <small>Gráfico de facturas por mes (Chart.js se integrará posteriormente)</small>
-          </p>
+          <div class="chart-wrapper">
+            <canvas 
+              #facturasChart
+              width="400" 
+              height="200">
+            </canvas>
+          </div>
         </div>
       </div>
 

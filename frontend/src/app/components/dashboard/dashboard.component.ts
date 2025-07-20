@@ -1,17 +1,21 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { DashboardService } from '../../services/dashboard.service';
 import { DashboardDTO, ProductoMovimientoDTO, ChartData } from '../../models/dashboard.model';
 import { Subject } from 'rxjs';
 import { takeUntil, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent implements OnInit, OnDestroy {
+export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('facturasChart', { static: false }) facturasChartRef!: ElementRef<HTMLCanvasElement>;
+  
   private destroy$ = new Subject<void>();
+  private chart: Chart | null = null;
   
   dashboardData: DashboardDTO | null = null;
   loading = false;
@@ -46,14 +50,23 @@ export class DashboardComponent implements OnInit, OnDestroy {
     dangerBorder: 'rgba(255, 99, 132, 1)'
   };
 
-  constructor(private dashboardService: DashboardService) { }
+  constructor(private dashboardService: DashboardService) { 
+    Chart.register(...registerables);
+  }
 
   ngOnInit(): void {
     this.loadDashboardData();
     this.loadProductosTopMovimiento();
   }
 
+  ngAfterViewInit(): void {
+    // Chart será inicializado cuando los datos estén listos
+  }
+
   ngOnDestroy(): void {
+    if (this.chart) {
+      this.chart.destroy();
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -109,12 +122,97 @@ export class DashboardComponent implements OnInit, OnDestroy {
           borderWidth: 2
         }]
       };
+
+      // Crear el gráfico después de que los datos estén listos
+      this.createChart();
     }
+  }
+
+  private createChart(): void {
+    if (!this.facturasChartRef || !this.facturasChartData) {
+      return;
+    }
+
+    // Destruir gráfico existente si existe
+    if (this.chart) {
+      this.chart.destroy();
+    }
+
+    const ctx = this.facturasChartRef.nativeElement.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+
+    const config: ChartConfiguration = {
+      type: 'line' as ChartType,
+      data: this.facturasChartData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top' as const,
+            labels: {
+              color: '#333',
+              font: {
+                size: 12
+              }
+            }
+          },
+          title: {
+            display: true,
+            text: 'Evolución de Facturas - Últimos 12 Meses',
+            color: '#333',
+            font: {
+              size: 16,
+              weight: 'bold'
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: '#666'
+            },
+            grid: {
+              color: '#e0e0e0'
+            }
+          },
+          x: {
+            ticks: {
+              color: '#666'
+            },
+            grid: {
+              color: '#e0e0e0'
+            }
+          }
+        },
+        elements: {
+          line: {
+            tension: 0.4
+          },
+          point: {
+            radius: 4,
+            hoverRadius: 6
+          }
+        }
+      }
+    };
+
+    this.chart = new Chart(ctx, config);
   }
 
   refreshData(): void {
     this.loadDashboardData();
     this.loadProductosTopMovimiento();
+  }
+
+  // Método público para recrear el gráfico manualmente si es necesario
+  recreateChart(): void {
+    if (this.facturasChartData) {
+      this.createChart();
+    }
   }
 
   // Métodos auxiliares para mostrar porcentajes y estadísticas
