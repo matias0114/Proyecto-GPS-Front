@@ -231,6 +231,9 @@
   color: white;
   padding: 20px;
   margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .chart-header h4, .table-header h4 {
@@ -247,11 +250,30 @@
   position: relative;
   height: 400px;
   width: 100%;
+  min-height: 300px;
+  padding: 10px;
 }
 
 .chart-wrapper canvas {
   max-width: 100%;
   height: 100% !important;
+  width: 100% !important;
+}
+
+/* Asegurar que el canvas mantenga las dimensiones correctas */
+canvas {
+  display: block !important;
+}
+
+/* Estilos para los controles del gráfico */
+.chart-header .btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.chart-header .btn:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .table {

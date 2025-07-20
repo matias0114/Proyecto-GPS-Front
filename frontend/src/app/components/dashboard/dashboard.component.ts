@@ -60,7 +60,12 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Chart será inicializado cuando los datos estén listos
+    // Esperar un ciclo de detección de cambios antes de crear el gráfico
+    setTimeout(() => {
+      if (this.facturasChartData) {
+        this.createChart();
+      }
+    }, 100);
   }
 
   ngOnDestroy(): void {
@@ -123,84 +128,105 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         }]
       };
 
+      console.log('Chart data prepared:', this.facturasChartData);
+      
       // Crear el gráfico después de que los datos estén listos
-      this.createChart();
+      // Usar setTimeout para asegurar que el ViewChild esté disponible
+      setTimeout(() => {
+        this.createChart();
+      }, 100);
+    } else {
+      console.warn('No data available for chart');
     }
   }
 
   private createChart(): void {
-    if (!this.facturasChartRef || !this.facturasChartData) {
+    // Verificar que todos los elementos necesarios estén disponibles
+    if (!this.facturasChartRef || !this.facturasChartRef.nativeElement || !this.facturasChartData) {
+      console.warn('Chart elements not ready, retrying...');
+      setTimeout(() => this.createChart(), 200);
       return;
     }
 
     // Destruir gráfico existente si existe
     if (this.chart) {
       this.chart.destroy();
+      this.chart = null;
     }
 
     const ctx = this.facturasChartRef.nativeElement.getContext('2d');
     if (!ctx) {
+      console.error('Could not get 2D context from canvas');
       return;
     }
 
-    const config: ChartConfiguration = {
-      type: 'line' as ChartType,
-      data: this.facturasChartData,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'top' as const,
-            labels: {
+    try {
+      const config: ChartConfiguration = {
+        type: 'line' as ChartType,
+        data: this.facturasChartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          },
+          plugins: {
+            legend: {
+              position: 'top' as const,
+              labels: {
+                color: '#333',
+                font: {
+                  size: 12
+                }
+              }
+            },
+            title: {
+              display: true,
+              text: 'Evolución de Facturas - Últimos 12 Meses',
               color: '#333',
               font: {
-                size: 12
+                size: 16,
+                weight: 'bold'
               }
             }
           },
-          title: {
-            display: true,
-            text: 'Evolución de Facturas - Últimos 12 Meses',
-            color: '#333',
-            font: {
-              size: 16,
-              weight: 'bold'
-            }
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              color: '#666'
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                color: '#666'
+              },
+              grid: {
+                color: '#e0e0e0'
+              }
             },
-            grid: {
-              color: '#e0e0e0'
+            x: {
+              ticks: {
+                color: '#666'
+              },
+              grid: {
+                color: '#e0e0e0'
+              }
             }
           },
-          x: {
-            ticks: {
-              color: '#666'
+          elements: {
+            line: {
+              tension: 0.4
             },
-            grid: {
-              color: '#e0e0e0'
+            point: {
+              radius: 4,
+              hoverRadius: 6
             }
-          }
-        },
-        elements: {
-          line: {
-            tension: 0.4
-          },
-          point: {
-            radius: 4,
-            hoverRadius: 6
           }
         }
-      }
-    };
+      };
 
-    this.chart = new Chart(ctx, config);
+      this.chart = new Chart(ctx, config);
+      console.log('Chart created successfully');
+    } catch (error) {
+      console.error('Error creating chart:', error);
+    }
   }
 
   refreshData(): void {
@@ -210,9 +236,22 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Método público para recrear el gráfico manualmente si es necesario
   recreateChart(): void {
+    console.log('Recreating chart manually...');
     if (this.facturasChartData) {
       this.createChart();
+    } else {
+      console.warn('No chart data available for recreation');
     }
+  }
+
+  // Método para verificar el estado del gráfico (útil para debugging)
+  checkChartStatus(): void {
+    console.log('Chart status:', {
+      hasChartRef: !!this.facturasChartRef,
+      hasChartData: !!this.facturasChartData,
+      hasChart: !!this.chart,
+      dashboardDataLoaded: !!this.dashboardData
+    });
   }
 
   // Métodos auxiliares para mostrar porcentajes y estadísticas
@@ -242,5 +281,14 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   formatNumber(num: number): string {
     return new Intl.NumberFormat('es-CL').format(num);
+  }
+
+  // Métodos auxiliares para el template (evitar warnings de optional chaining)
+  getChartDataPointsCount(): number {
+    return this.facturasChartData?.datasets?.[0]?.data?.length || 0;
+  }
+
+  getChartLabelsCount(): number {
+    return this.facturasChartData?.labels?.length || 0;
   }
 }
