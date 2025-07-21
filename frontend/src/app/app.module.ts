@@ -17,6 +17,8 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { ReportesComponent } from './components/reportes/reportes.component';
 import { VentasComponent } from './components/ventas/ventas.component';
 import { VentaComponent } from './components/venta/venta.component';
+import { LoginComponent } from './components/login/login.component';
+import { RegisterComponent } from './components/register/register.component';
 
 @NgModule({
   declarations: [
@@ -32,7 +34,9 @@ import { VentaComponent } from './components/venta/venta.component';
     DashboardComponent,
     ReportesComponent,
     VentasComponent,
-    VentaComponent
+    VentaComponent,
+    LoginComponent,
+    RegisterComponent
   ],
   imports: [
     BrowserModule,

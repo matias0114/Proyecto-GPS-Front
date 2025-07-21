@@ -14,11 +14,23 @@
       <a routerLink="/precios">Lista de Precios</a>
     </nav>
     <div class="auth-buttons">
-      <button class="btn-outline">Iniciar Sesión</button>
-      <button class="btn-filled">Registrarse</button>
+      <!-- Show login/register buttons when not logged in -->
+      <div *ngIf="!currentUser">
+        <button class="btn-outline" (click)="openLogin()">Iniciar Sesión</button>
+        <button class="btn-filled" (click)="openRegister()">Registrarse</button>
+      </div>
+      <!-- Show user info and logout when logged in -->
+      <div *ngIf="currentUser" class="user-info">
+        <span class="welcome-text">Bienvenido, {{ currentUser.username }}!</span>
+        <button class="btn-outline" (click)="logout()">Cerrar Sesión</button>
+      </div>
     </div>
   </div>
 </header>
 
 <!-- Aquí se mostrarán los componentes según la ruta -->
 <router-outlet></router-outlet>
+
+<!-- Login and Register Modals -->
+<app-login #loginComponent></app-login>
+<app-register #registerComponent></app-register>
