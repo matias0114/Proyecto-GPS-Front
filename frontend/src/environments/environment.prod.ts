@@ -11,6 +11,10 @@ export const environment = {
     precios: '/api/precios',
     dashboard: '/api/dashboard',
     seguridad: '/api/seguridad',
-    backend: '/api'
+    backend: '/api',
+    // Endpoints específicos para el microservicio de ventas (configurados en nginx)
+    sales: '/api/sales',
+    inventoryQuery: '/api/inventory-query',
+    pricelist: '/api/pricelist'
   }
 };

@@ -11,6 +11,10 @@ export const environment = {
     precios: 'http://localhost:8086/api/precios',
     dashboard: 'http://localhost:8085/api/dashboard',
     seguridad: 'http://localhost:8083/api/seguridad',
-    backend: 'http://localhost:8080/api'
+    backend: 'http://localhost:8080/api',
+    // Endpoints específicos para el microservicio de ventas
+    sales: 'http://localhost:8084/api/sales',
+    inventoryQuery: 'http://localhost:8084/api/inventory-query',
+    pricelist: 'http://localhost:8081/api/pricelist'
   }
 };

@@ -15,9 +15,9 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class VentaService {
-  // URL del microservicio de ventas
-  private readonly baseUrl = `${environment.endpoints.ventas}/sales`;
-  private readonly inventoryQueryUrl = `${environment.endpoints.ventas}/inventory-query`;
+  // URLs configuradas en nginx para el microservicio de ventas
+  private readonly baseUrl = environment.endpoints.sales;
+  private readonly inventoryQueryUrl = environment.endpoints.inventoryQuery;
 
   constructor(private http: HttpClient) {}
 
@@ -143,8 +143,7 @@ export class VentaService {
    * Obtener precio actual de un producto desde las listas de precios
    */
   obtenerPrecioActualProducto(productoId: number): Observable<any> {
-    const priceListUrl = 'http://localhost:8081/api/pricelist';
-    const fullUrl = `${priceListUrl}/product/${productoId}`;
+    const fullUrl = `${environment.endpoints.pricelist}/product/${productoId}`;
     
     console.log('🔍 Consultando listas de precios para producto:', {
       productoId: productoId,
@@ -168,8 +167,7 @@ export class VentaService {
    * Obtener precios actuales vigentes
    */
   obtenerPreciosActuales(): Observable<any[]> {
-    const priceListUrl = 'http://localhost:8081/api/pricelist';
-    return this.http.get<any[]>(`${priceListUrl}/current`)
+    return this.http.get<any[]>(`${environment.endpoints.pricelist}/current`)
       .pipe(catchError(this.handleError));
   }
 
