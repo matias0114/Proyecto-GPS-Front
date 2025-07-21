@@ -1,0 +1,358 @@
+<div class="ventas-container">
+  <h2>Gestión de Ventas</h2>
+
+  <!-- Mensajes de estado -->
+  <div *ngIf="message" class="alert" [ngClass]="{'alert-success': messageType === 'success', 'alert-error': messageType === 'error'}">
+    {{ message }}
+  </div>
+
+  <!-- Panel de formulario para nueva venta -->
+  <div class="form-panel">
+    <div class="form-header">
+      <h3>Nueva Venta</h3>
+      <button type="button" class="btn-toggle" (click)="toggleFormPanel()">
+        {{ showFormPanel ? '▼ Ocultar' : '▶ Mostrar' }} Formulario
+      </button>
+    </div>
+
+    <div class="form-content" [class.expanded]="showFormPanel">
+      <form [formGroup]="formularioVenta" (ngSubmit)="onSubmit()" class="venta-form">
+        
+        <!-- Información del paciente -->
+        <div class="form-section">
+          <h4>Información del Paciente</h4>
+          
+          <div class="form-group">
+            <label for="patientRut">RUT del Paciente *</label>
+            <div class="input-group">
+              <input 
+                id="patientRut" 
+                type="text" 
+                formControlName="patientRut" 
+                placeholder="12.345.678-9"
+                [class.is-invalid]="isFieldInvalid('patientRut')"
+                (blur)="buscarPaciente()" />
+              <button type="button" class="btn-search" (click)="buscarPaciente()" [disabled]="loading">
+                🔍
+              </button>
+            </div>
+            <div *ngIf="isFieldInvalid('patientRut')" class="invalid-feedback">
+              RUT es requerido y debe tener formato válido (XX.XXX.XXX-X)
+            </div>
+            
+            <!-- Información del paciente encontrado -->
+            <div *ngIf="pacienteEncontrado" class="patient-info">
+              <p><strong>Paciente:</strong> {{ pacienteEncontrado.nombre }} {{ pacienteEncontrado.apellido }}</p>
+              <p><strong>Beneficiario:</strong> {{ pacienteEncontrado.esBeneficiario ? 'Sí' : 'No' }}</p>
+              <p *ngIf="pacienteEncontrado.esBeneficiario"><strong>Tipo:</strong> {{ pacienteEncontrado.tipoBeneficio }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Items de venta -->
+        <div class="form-section">
+          <h4>Items de Venta</h4>
+          
+          <div formArrayName="saleItems">
+            <div *ngFor="let item of saleItemsArray.controls; let i = index" [formGroupName]="i" class="sale-item">
+              <div class="item-header">
+                <h5>Item {{ i + 1 }}</h5>
+                <button type="button" class="btn-remove" (click)="removerItem(i)" [disabled]="saleItemsArray.length === 1">
+                  🗑️
+                </button>
+              </div>
+              
+              <div class="item-content">
+                <!-- Producto -->
+                <div class="form-group">
+                  <label>Producto *</label>
+                  <select formControlName="productId" [class.is-invalid]="isItemFieldInvalid(i, 'productId')" (change)="onProductoSeleccionado(i, $event)">
+                    <option value="">Seleccionar producto</option>
+                    <option *ngFor="let producto of productosDisponibles" [value]="producto.id">
+                      {{ producto.code }} - {{ producto.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Bodega -->
+                <div class="form-group">
+                  <label>Bodega *</label>
+                  <select formControlName="warehouseId" [class.is-invalid]="isItemFieldInvalid(i, 'warehouseId')" (change)="onBodegaSeleccionada(i, $event)">
+                    <option value="">Seleccionar bodega</option>
+                    <option *ngFor="let bodega of bodegasDisponibles" [value]="bodega.id">
+                      {{ bodega.name }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Lote -->
+                <div class="form-group">
+                  <label>Lote *</label>
+                  <select formControlName="batchId" [class.is-invalid]="isItemFieldInvalid(i, 'batchId')" (change)="onLoteSeleccionado(i, $event)">
+                    <option value="">Seleccionar lote</option>
+                    <option *ngFor="let inventario of inventariosDisponibles[i] || []" [value]="inventario.batchId">
+                      {{ inventario.batch.batchNumber }} (Stock: {{ inventario.currentStock }})
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Cantidad -->
+                <div class="form-group">
+                  <label>Cantidad *</label>
+                  <input 
+                    type="number" 
+                    formControlName="quantity" 
+                    min="1" 
+                    placeholder="1"
+                    [class.is-invalid]="isItemFieldInvalid(i, 'quantity')" 
+                    (change)="validarStock(i)" />
+                  <div *ngIf="stockWarnings[i]" class="stock-warning">
+                    {{ stockWarnings[i] }}
+                  </div>
+                </div>
+
+                <!-- Precio Unitario -->
+                <div class="form-group">
+                  <label>Precio Unitario</label>
+                  <input 
+                    type="number" 
+                    formControlName="unitPrice" 
+                    readonly
+                    class="readonly-field"
+                  />
+                </div>
+
+                <!-- Información de stock -->
+                <div *ngIf="inventariosSeleccionados[i]" class="stock-info">
+                  <p><strong>Stock disponible:</strong> {{ inventariosSeleccionados[i]?.currentStock }}</p>
+                  <p><strong>Precio unitario:</strong> ${{ (saleItemsArray.at(i).get('unitPrice')?.value || preciosEstimados[i] || 0) | number:'1.0-0' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón para agregar items -->
+          <button type="button" class="btn-add-item" (click)="agregarItem()">
+            ➕ Agregar Item
+          </button>
+        </div>
+
+        <!-- Resumen de venta -->
+        <div class="form-section" *ngIf="resumenVenta">
+          <h4>Resumen de Venta</h4>
+          <div class="sale-summary">
+            <p><strong>Subtotal:</strong> ${{ resumenVenta.subtotal | number:'1.0-0' }}</p>
+            <p *ngIf="resumenVenta.discountPercentage > 0">
+              <strong>Descuento ({{ resumenVenta.discountPercentage }}%):</strong> 
+              -${{ resumenVenta.discountAmount | number:'1.0-0' }}
+            </p>
+            <p class="total-amount"><strong>Total:</strong> ${{ resumenVenta.totalAmount | number:'1.0-0' }}</p>
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="form-actions">
+          <button 
+            type="submit" 
+            class="btn-primary" 
+            [disabled]="loading || formularioVenta.invalid || !pacienteEncontrado">
+            {{ loading ? 'Procesando...' : 'Procesar Venta' }}
+          </button>
+          
+          <button type="button" class="btn-reset" (click)="resetForm()">
+            Limpiar Formulario
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Filtros y controles -->
+  <div class="controls-section">
+    <div class="controls-header">
+      <div class="view-controls">
+        <button 
+          type="button" 
+          class="btn-filter" 
+          [class.active]="mostrarVentasDeHoy" 
+          (click)="toggleVentasDeHoy()">
+          {{ mostrarVentasDeHoy ? '📅 Todas las ventas' : '📅 Solo hoy' }}
+        </button>
+        
+        <button type="button" class="btn-filter" (click)="toggleFiltros()">
+          🔍 {{ showFilters ? 'Ocultar' : 'Mostrar' }} Filtros
+        </button>
+      </div>
+      
+      <div class="summary-info" *ngIf="ventasFiltradas.length > 0">
+        <span>{{ ventasFiltradas.length }} ventas encontradas</span>
+        <span>Total: ${{ calcularTotalVentas() | number:'1.0-0' }}</span>
+      </div>
+    </div>
+
+    <!-- Panel de filtros -->
+    <div class="filters-panel" [class.expanded]="showFilters">
+      <div class="filters-content">
+        <div class="filter-group">
+          <label>RUT Paciente:</label>
+          <input 
+            type="text" 
+            [(ngModel)]="filtros.patientRut" 
+            placeholder="12.345.678-9"
+            (input)="aplicarFiltros()" />
+        </div>
+        
+        <div class="filter-group">
+          <label>Estado:</label>
+          <select [(ngModel)]="filtros.status" (change)="aplicarFiltros()">
+            <option value="">Todos</option>
+            <option value="PENDING">Pendiente</option>
+            <option value="COMPLETED">Completada</option>
+            <option value="CANCELLED">Cancelada</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label>Fecha desde:</label>
+          <input type="date" [(ngModel)]="filtros.dateFrom" (change)="aplicarFiltros()" />
+        </div>
+        
+        <div class="filter-group">
+          <label>Fecha hasta:</label>
+          <input type="date" [(ngModel)]="filtros.dateTo" (change)="aplicarFiltros()" />
+        </div>
+        
+        <div class="filter-actions">
+          <button type="button" class="btn-clear" (click)="limpiarFiltros()">
+            Limpiar Filtros
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de ventas -->
+  <div class="ventas-list" *ngIf="ventasFiltradas.length > 0">
+    <h3>{{ mostrarVentasDeHoy ? 'Ventas de Hoy' : 'Historial de Ventas' }}</h3>
+    
+    <div class="table-container">
+      <table class="ventas-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Paciente</th>
+            <th>RUT</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let venta of ventasFiltradas" [class.cancelled]="venta.status === 'CANCELLED'">
+            <td>{{ venta.id }}</td>
+            <td>{{ venta.saleDate | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ venta.patientName }}</td>
+            <td>{{ venta.patientRut }}</td>
+            <td>{{ venta.saleItems.length }}</td>
+            <td>${{ venta.totalAmount | number:'1.0-0' }}</td>
+            <td>
+              <span class="status-badge" [class]="'status-' + venta.status.toLowerCase()">
+                {{ getStatusLabel(venta.status) }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button 
+                  type="button" 
+                  class="btn-action btn-view" 
+                  (click)="verDetalleVenta(venta)"
+                  title="Ver detalle">
+                  👁️
+                </button>
+                <button 
+                  type="button" 
+                  class="btn-action btn-cancel" 
+                  (click)="cancelarVenta(venta.id!)"
+                  [disabled]="venta.status === 'CANCELLED'"
+                  title="Cancelar venta">
+                  ❌
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Estado cuando no hay ventas -->
+  <div *ngIf="ventasFiltradas.length === 0 && !loading" class="empty-state">
+    <p>{{ mostrarVentasDeHoy ? 'No hay ventas registradas hoy.' : 'No se han registrado ventas.' }}</p>
+    <p>Utilice el formulario anterior para registrar la primera venta.</p>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="loading-state">
+    <p>Cargando...</p>
+  </div>
+</div>
+
+<!-- Modal para detalle de venta -->
+<div *ngIf="ventaSeleccionada" class="modal-overlay" (click)="cerrarModalDetalle()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Detalle de Venta #{{ ventaSeleccionada.id }}</h3>
+      <button type="button" class="btn-close" (click)="cerrarModalDetalle()">✕</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="sale-detail">
+        <div class="detail-section">
+          <h4>Información General</h4>
+          <p><strong>Fecha:</strong> {{ ventaSeleccionada.saleDate | date:'dd/MM/yyyy HH:mm:ss' }}</p>
+          <p><strong>Paciente:</strong> {{ ventaSeleccionada.patientName }}</p>
+          <p><strong>RUT:</strong> {{ ventaSeleccionada.patientRut }}</p>
+          <p><strong>Beneficiario:</strong> {{ ventaSeleccionada.isBeneficiary ? 'Sí' : 'No' }}</p>
+          <p *ngIf="ventaSeleccionada.benefitType"><strong>Tipo de Beneficio:</strong> {{ ventaSeleccionada.benefitType }}</p>
+          <p><strong>Estado:</strong> 
+            <span class="status-badge" [class]="'status-' + ventaSeleccionada.status.toLowerCase()">
+              {{ getStatusLabel(ventaSeleccionada.status) }}
+            </span>
+          </p>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Items Vendidos</h4>
+          <div class="items-detail">
+            <div *ngFor="let item of ventaSeleccionada.saleItems" class="item-detail">
+              <p><strong>Producto:</strong> {{ item.productCode }} - {{ item.productName }}</p>
+              <p><strong>Lote:</strong> {{ item.batchNumber }}</p>
+              <p><strong>Bodega:</strong> {{ item.warehouseName }}</p>
+              <p><strong>Cantidad:</strong> {{ item.quantity }}</p>
+              <p><strong>Precio Unitario:</strong> ${{ item.unitPrice | number:'1.0-0' }}</p>
+              <p><strong>Total Item:</strong> ${{ item.totalPrice | number:'1.0-0' }}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="detail-section">
+          <h4>Resumen Financiero</h4>
+          <p><strong>Subtotal:</strong> ${{ ventaSeleccionada.subtotal | number:'1.0-0' }}</p>
+          <p *ngIf="ventaSeleccionada.discountAmount && ventaSeleccionada.discountAmount > 0">
+            <strong>Descuento:</strong> -${{ ventaSeleccionada.discountAmount | number:'1.0-0' }}
+            ({{ ventaSeleccionada.discountPercentage }}%)
+          </p>
+          <p class="total-amount"><strong>Total Final:</strong> ${{ ventaSeleccionada.totalAmount | number:'1.0-0' }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" (click)="cerrarModalDetalle()">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
