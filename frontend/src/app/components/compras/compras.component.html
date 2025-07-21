@@ -1,16 +1,24 @@
 <div class="form-container">
   <h2>Registro de Compras</h2>
   <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
-    <label>Nº Orden *</label>
-    <input formControlName="numeroOrden" placeholder="12345" />
-    <label>Monto *</label>
-    <input type="number" formControlName="montoTotal" />
-    <label>Proveedor *</label>
-    <input formControlName="proveedor" placeholder="ACME S.A." />
-    <label>Estado</label>
-    <select formControlName="estado">
-      <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
-    </select>
+    <div class="form-group">
+      <label>Nº Orden *</label>
+      <input formControlName="numeroOrden" placeholder="12345" />
+    </div>
+    <div class="form-group">
+      <label>Monto *</label>
+      <input type="number" formControlName="montoTotal" />
+    </div>
+    <div class="form-group">
+      <label>Proveedor *</label>
+      <input formControlName="proveedor" placeholder="ACME S.A." />
+    </div>
+    <div class="form-group">
+      <label>Estado</label>
+      <select formControlName="estado">
+        <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
+      </select>
+    </div>
     <button type="submit" [disabled]="formulario.invalid">Crear Compra</button>
   </form>
 

@@ -1,14 +1,22 @@
 <div class="form-container">
   <h2>Registro de Facturas</h2>
   <form [formGroup]="formulario" (ngSubmit)="onSubmit()">
-    <label>Nº Factura *</label>
-    <input formControlName="numeroFactura" />
-    <label>ID Compra *</label>
-    <input type="number" formControlName="compraId" />
-    <label>Monto *</label>
-    <input type="number" formControlName="montoTotal" />
-    <label>RUT Proveedor *</label>
-    <input formControlName="rutProveedor" placeholder="12345678-9" />
+    <div class="form-group">
+      <label>Nº Factura *</label>
+      <input formControlName="numeroFactura" />
+    </div>
+    <div class="form-group">
+      <label>ID Compra *</label>
+      <input type="number" formControlName="compraId" />
+    </div>
+    <div class="form-group">
+      <label>Monto *</label>
+      <input type="number" formControlName="montoTotal" />
+    </div>
+    <div class="form-group">
+      <label>RUT Proveedor *</label>
+      <input formControlName="rutProveedor" placeholder="12345678-9" />
+    </div>
     <button type="submit" [disabled]="formulario.invalid">Crear Factura</button>
   </form>
 
