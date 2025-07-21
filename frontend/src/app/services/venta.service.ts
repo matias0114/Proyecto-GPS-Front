@@ -9,14 +9,15 @@ import {
   ProductoDisponible, 
   BodegaDisponible 
 } from '../models/venta.model';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class VentaService {
   // URL del microservicio de ventas
-  private readonly baseUrl = 'http://localhost:8084/api/sales';
-  private readonly inventoryQueryUrl = 'http://localhost:8084/api/inventory-query';
+  private readonly baseUrl = `${environment.endpoints.ventas}/sales`;
+  private readonly inventoryQueryUrl = `${environment.endpoints.ventas}/inventory-query`;
 
   constructor(private http: HttpClient) {}
 
